@@ -1,0 +1,17 @@
+@using PantryTracker.Core
+<div class="dashboard-card">
+    <h3>Expiring Soon</h3>
+    <div class="expiring-list">
+        @foreach (var item in Items)
+        {
+            <div class="expiring-item">
+                <span class="item-name">@item.Name</span>
+                <span class="expiry-date">@item.ExpiryDate.ToShortDateString()</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<FoodItem> Items { get; set; }
+}

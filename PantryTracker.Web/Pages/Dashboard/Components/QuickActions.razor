@@ -1,0 +1,20 @@
+<div class="quick-actions">
+    <button class="action-button" @onclick="OnAddItem">
+        <i class="fas fa-plus"></i>
+        Add Item
+    </button>
+    <button class="action-button" @onclick="OnScanBarcode">
+        <i class="fas fa-barcode"></i>
+        Scan Barcode
+    </button>
+    <button class="action-button" @onclick="OnExportList">
+        <i class="fas fa-file-export"></i>
+        Export Shopping List
+    </button>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnAddItem { get; set; }
+    [Parameter] public EventCallback OnScanBarcode { get; set; }
+    [Parameter] public EventCallback OnExportList { get; set; }
+}

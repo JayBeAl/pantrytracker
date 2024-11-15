@@ -1,0 +1,17 @@
+@using PantryTracker.Core
+<div class="dashboard-card">
+    <h3>Low Stock Items</h3>
+    <div class="low-stock-list">
+        @foreach (var item in Items)
+        {
+            <div class="low-stock-item">
+                <span class="item-name">@item.Name</span>
+                <span class="quantity">@item.Quantity left</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<FoodItem> Items { get; set; }
+}

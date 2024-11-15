@@ -1,0 +1,73 @@
+@page "/"
+@using PantryTracker.Core
+@using PantryTracker.Core.Interfaces
+@inject IFoodItemService FoodItemService
+@inject NavigationManager NavigationManager
+
+<div class="dashboard">
+    <DashboardStats
+        TotalItems="_totalItems"
+        ExpiringItems="_expiringItems"
+        LowStockItems="_lowStockItems" />
+
+    <div class="dashboard-grid">
+        <ExpiringItemsList Items="_expiringItemsList" />
+        <LowStockList Items="_lowStockItemsList" />
+    </div>
+
+    <QuickActions
+        OnAddItem="AddNewItem"
+        OnScanBarcode="ScanBarcode"
+        OnExportList="ExportShoppingList" />
+</div>
+
+@code {
+    private int _totalItems;
+    private int _expiringItems;
+    private int _lowStockItems;
+    private IEnumerable<FoodItem> _expiringItemsList = new List<FoodItem>();
+    private IEnumerable<FoodItem> _lowStockItemsList = new List<FoodItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        var allItemsResult = await FoodItemService.GetAllAsync();
+        if (allItemsResult.IsSuccess)
+        {
+            _totalItems = allItemsResult.Value.Count();
+        }
+
+        var expiringResult = await FoodItemService.GetExpiringItemsAsync(7);
+        if (expiringResult.IsSuccess)
+        {
+            _expiringItemsList = expiringResult.Value;
+            _expiringItems = _expiringItemsList.Count();
+        }
+
+        var lowStockResult = await FoodItemService.GetLowStockItemsAsync(3);
+        if (lowStockResult.IsSuccess)
+        {
+            _lowStockItemsList = lowStockResult.Value;
+            _lowStockItems = _lowStockItemsList.Count();
+        }
+    }
+
+    private void AddNewItem()
+    {
+        NavigationManager.NavigateTo("/fooditems/new");
+    }
+
+    private async Task ScanBarcode()
+    {
+        // Barcode scanning functionality will be implemented later
+    }
+
+    private async Task ExportShoppingList()
+    {
+        // Export functionality will be implemented later
+    }
+}

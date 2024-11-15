@@ -1,0 +1,20 @@
+<div class="stats-grid">
+    <div class="stat-card total-items">
+        <div class="stat-value">@TotalItems</div>
+        <div class="stat-label">Total Items</div>
+    </div>
+    <div class="stat-card expiring-soon">
+        <div class="stat-value">@ExpiringItems</div>
+        <div class="stat-label">Expiring Soon</div>
+    </div>
+    <div class="stat-card low-stock">
+        <div class="stat-value">@LowStockItems</div>
+        <div class="stat-label">Low Stock</div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int TotalItems { get; set; }
+    [Parameter] public int ExpiringItems { get; set; }
+    [Parameter] public int LowStockItems { get; set; }
+}
