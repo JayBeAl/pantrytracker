@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PantryTracker.Core.Interfaces;
 using PantryTracker.Infrastructure;
+using PantryTracker.Infrastructure.Data;
 using PantryTracker.Infrastructure.Data.Repositories;
 using PantryTracker.Infrastructure.Services;
 
@@ -21,6 +22,13 @@ builder.Services.AddScoped<IFoodItemRepository, FoodItemRepository>();
 builder.Services.AddScoped<IFoodItemService, FoodItemService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<PantryContext>();
+    DbInitializer.Initialize(context);
+}
 
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
