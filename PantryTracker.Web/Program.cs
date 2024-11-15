@@ -1,6 +1,7 @@
 using PantryTracker.Core.Interfaces;
 using PantryTracker.Infrastructure;
 using PantryTracker.Infrastructure.Data.Repositories;
+using PantryTracker.Infrastructure.Services;
 using PantryTracker.Web.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddDbContext<PantryContext>();
 builder.Services.AddScoped<IFoodItemRepository, FoodItemRepository>();
+builder.Services.AddScoped<IFoodItemService, FoodItemService>();
 
 
 var app = builder.Build();

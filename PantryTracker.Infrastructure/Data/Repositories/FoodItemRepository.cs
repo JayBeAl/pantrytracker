@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PantryTracker.Core;
+using PantryTracker.Core.Common;
 using PantryTracker.Core.Interfaces;
 
 namespace PantryTracker.Infrastructure.Data.Repositories;
@@ -13,57 +14,86 @@ public class FoodItemRepository : IFoodItemRepository
         _context = context;
     }
 
-    public async Task<FoodItem?> GetByIdAsync(int id)
+    public async Task<Result<FoodItem>> GetByIdAsync(int id)
     {
-        return await _context.FoodItems
+        var item = await _context.FoodItems
             .Include(f => f.NutritionalInfo)
             .FirstOrDefaultAsync(f => f.Id == id);
+
+        return item == null 
+            ? Result<FoodItem>.Failure($"FoodItem with ID {id} not found.") 
+            : Result<FoodItem>.Success(item);
     }
 
-    public async Task<FoodItem?> GetByBarcodeAsync(string barcode)
+    public async Task<Result<FoodItem>> GetByBarcodeAsync(string barcode)
     {
-        return await _context.FoodItems
+        var item = await _context.FoodItems
             .Include(f => f.NutritionalInfo)
             .FirstOrDefaultAsync(f => f.Barcode == barcode);
+
+        return item == null 
+            ? Result<FoodItem>.Failure($"FoodItem with barcode {barcode} not found.") 
+            : Result<FoodItem>.Success(item);
     }
 
-    public async Task<IEnumerable<FoodItem>> GetAllAsync()
+    public async Task<Result<IEnumerable<FoodItem>>> GetAllAsync()
     {
-        return await _context.FoodItems
+        var items = await _context.FoodItems
             .Include(f => f.NutritionalInfo)
             .ToListAsync();
+
+        return Result<IEnumerable<FoodItem>>.Success(items);
     }
 
-    public async Task<IEnumerable<FoodItem>> GetExpiringItemsAsync(int daysThreshold)
+    public async Task<Result<IEnumerable<FoodItem>>> GetExpiringItemsAsync(int daysThreshold)
     {
         var thresholdDate = DateTime.Now.AddDays(daysThreshold);
-        return await _context.FoodItems
+        var items = await _context.FoodItems
             .Include(f => f.NutritionalInfo)
             .Where(f => f.ExpiryDate <= thresholdDate)
             .OrderBy(f => f.ExpiryDate)
             .ToListAsync();
+
+        return Result<IEnumerable<FoodItem>>.Success(items);
     }
 
-    public async Task<IEnumerable<FoodItem>> GetByStorageLocationAsync(string location)
+    public async Task<Result<IEnumerable<FoodItem>>> GetByStorageLocationAsync(string location)
     {
-        return await _context.FoodItems
+        var items = await _context.FoodItems
             .Include(f => f.NutritionalInfo)
             .Where(f => f.StorageLocation == location)
             .ToListAsync();
+
+        return Result<IEnumerable<FoodItem>>.Success(items);
     }
 
-    public async Task AddAsync(FoodItem foodItem)
+    public async Task<Result<bool>> AddAsync(FoodItem foodItem)
     {
-        await _context.FoodItems.AddAsync(foodItem);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task UpdateAsync(FoodItem foodItem)
-    {
-        var existingItem = await GetByIdAsync(foodItem.Id);
-        if (existingItem != null)
+        try
         {
+            await _context.FoodItems.AddAsync(foodItem);
+            await _context.SaveChangesAsync();
+            return Result<bool>.Success(true);
+        }
+        catch (DbUpdateException ex)
+        {
+            return Result<bool>.Failure($"Failed to add food item: {ex.Message}");
+        }
+    }
+
+    public async Task<Result<bool>> UpdateAsync(FoodItem foodItem)
+    {
+        try
+        {
+            var existingItem = await _context.FoodItems
+                .Include(f => f.NutritionalInfo)
+                .FirstOrDefaultAsync(f => f.Id == foodItem.Id);
+
+            if (existingItem == null)
+                return Result<bool>.Failure($"FoodItem with ID {foodItem.Id} not found.");
+
             _context.Entry(existingItem).CurrentValues.SetValues(foodItem);
+            
             if (foodItem.NutritionalInfo != null)
             {
                 if (existingItem.NutritionalInfo == null)
@@ -73,22 +103,37 @@ public class FoodItemRepository : IFoodItemRepository
                 _context.Entry(existingItem.NutritionalInfo)
                     .CurrentValues.SetValues(foodItem.NutritionalInfo);
             }
+
             await _context.SaveChangesAsync();
+            return Result<bool>.Success(true);
+        }
+        catch (DbUpdateException ex)
+        {
+            return Result<bool>.Failure($"Failed to update food item: {ex.Message}");
         }
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task<Result<bool>> DeleteAsync(int id)
     {
-        var foodItem = await GetByIdAsync(id);
-        if (foodItem != null)
+        try
         {
+            var foodItem = await _context.FoodItems.FindAsync(id);
+            if (foodItem == null)
+                return Result<bool>.Failure($"FoodItem with ID {id} not found.");
+
             _context.FoodItems.Remove(foodItem);
             await _context.SaveChangesAsync();
+            return Result<bool>.Success(true);
+        }
+        catch (DbUpdateException ex)
+        {
+            return Result<bool>.Failure($"Failed to delete food item: {ex.Message}");
         }
     }
 
-    public async Task<bool> ExistsAsync(int id)
+    public async Task<Result<bool>> ExistsAsync(int id)
     {
-        return await _context.FoodItems.AnyAsync(f => f.Id == id);
+        var exists = await _context.FoodItems.AnyAsync(f => f.Id == id);
+        return Result<bool>.Success(exists);
     }
 }
