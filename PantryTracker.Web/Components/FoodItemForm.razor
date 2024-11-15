@@ -1,0 +1,108 @@
+@page "/fooditems/new"
+@page "/fooditems/edit/{Id:int}"
+@using PantryTracker.Core
+@using PantryTracker.Core.Common
+@using PantryTracker.Core.Interfaces
+@inject IFoodItemService FoodItemService
+@inject NavigationManager NavigationManager
+
+<div class="food-item-form">
+    <div class="form-header">
+        <h2>@(_isNew ? "Add New Item" : "Edit Item")</h2>
+    </div>
+
+    <EditForm Model="@_foodItem" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="form-group">
+            <label for="name">Name</label>
+            <InputText id="name" @bind-Value="_foodItem.Name" class="form-control" />
+            <ValidationMessage For="@(() => _foodItem.Name)" />
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="quantity">Quantity</label>
+                <InputNumber id="quantity" @bind-Value="_foodItem.Quantity" class="form-control" />
+                <ValidationMessage For="@(() => _foodItem.Quantity)" />
+            </div>
+
+            <div class="form-group">
+                <label for="location">Storage Location</label>
+                <InputText id="location" @bind-Value="_foodItem.StorageLocation" class="form-control" />
+                <ValidationMessage For="@(() => _foodItem.StorageLocation)" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="expiryDate">Expiry Date</label>
+                <InputDate id="expiryDate" @bind-Value="_foodItem.ExpiryDate" class="form-control" />
+                <ValidationMessage For="@(() => _foodItem.ExpiryDate)" />
+            </div>
+
+            <div class="form-group">
+                <label for="barcode">Barcode</label>
+                <div class="barcode-input">
+                    <InputText id="barcode" @bind-Value="_foodItem.Barcode" class="form-control" />
+                    <button type="button" class="btn btn-secondary" @onclick="ScanBarcode">
+                        <i class="fas fa-barcode"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    private FoodItem _foodItem = new() { ExpiryDate = DateTime.Now.AddDays(7) };
+    private bool _isNew => Id == null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!_isNew)
+        {
+            var result = await FoodItemService.GetByIdAsync(Id.Value);
+            if (result.IsSuccess)
+            {
+                _foodItem = result.Value;
+            }
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (_isNew)
+        {
+            var result = await FoodItemService.AddFoodItemAsync(_foodItem);
+            if (result.IsSuccess)
+            {
+                NavigationManager.NavigateTo("/fooditems");
+            }
+        }
+        else
+        {
+            var result = await FoodItemService.UpdateFoodItemAsync(_foodItem);
+            if (result.IsSuccess)
+            {
+                NavigationManager.NavigateTo("/fooditems");
+            }
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/fooditems");
+    }
+
+    private async Task ScanBarcode()
+    {
+        // Barcode scanning functionality will be implemented later
+    }
+}

@@ -1,0 +1,99 @@
+@page "/fooditems"
+@using PantryTracker.Core
+@using PantryTracker.Core.Interfaces
+@inject IFoodItemService FoodItemService
+@inject NavigationManager NavigationManager
+
+<div class="page-header">
+    <h1>Pantry Items</h1>
+    <button class="btn btn-primary" @onclick="AddNewItem">
+        <i class="fas fa-plus"></i> Add Item
+    </button>
+</div>
+
+@if (_loading)
+{
+    <div class="loading-spinner">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_error != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @_error
+    </div>
+}
+else if (!_foodItems.Any())
+{
+    <div class="empty-state">
+        <p>No items in your pantry yet.</p>
+        <button class="btn btn-primary" @onclick="AddNewItem">Add your first item</button>
+    </div>
+}
+else
+{
+    <div class="food-items-grid">
+        @foreach (var item in _foodItems)
+        {
+            <FoodItemCard 
+                Item="@item" 
+                OnDelete="@DeleteItem"
+                OnEdit="@EditItem" />
+        }
+    </div>
+}
+
+@code {
+    private IEnumerable<FoodItem> _foodItems = new List<FoodItem>();
+    private bool _loading = true;
+    private string _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFoodItems();
+    }
+
+    private async Task LoadFoodItems()
+    {
+        _loading = true;
+        _error = null;
+
+        var result = await FoodItemService.GetAllAsync();
+        
+        if (result.IsSuccess)
+        {
+            _foodItems = result.Value;
+        }
+        else
+        {
+            _error = result.Error;
+        }
+
+        _loading = false;
+    }
+
+    private async Task DeleteItem(int id)
+    {
+        var result = await FoodItemService.DeleteFoodItemAsync(id);
+        if (result.IsSuccess)
+        {
+            await LoadFoodItems();
+        }
+        else
+        {
+            _error = result.Error;
+        }
+    }
+
+    private void EditItem(int id)
+    {
+        NavigationManager.NavigateTo($"/fooditems/edit/{id}");
+    }
+
+    private void AddNewItem()
+    {
+        NavigationManager.NavigateTo("/fooditems/new");
+    }
+}
