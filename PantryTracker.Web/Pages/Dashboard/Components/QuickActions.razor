@@ -1,9 +1,10 @@
+@using PantryTracker.Web.Shared.Components
 <div class="quick-actions">
     <button class="action-button" @onclick="OnAddItem">
         <i class="fas fa-plus"></i>
         Add Item
     </button>
-    <button class="action-button" @onclick="OnScanBarcode">
+    <button class="action-button" @onclick="ShowScanner">
         <i class="fas fa-barcode"></i>
         Scan Barcode
     </button>
@@ -13,8 +14,28 @@
     </button>
 </div>
 
+@if (_showScanner)
+{
+    <div class="scanner-modal">
+        <BarcodeScanner OnBarcodeScanned="HandleBarcode" />
+    </div>
+}
+
 @code {
+    private bool _showScanner;
+
     [Parameter] public EventCallback OnAddItem { get; set; }
-    [Parameter] public EventCallback OnScanBarcode { get; set; }
+    [Parameter] public EventCallback<string> OnBarcodeScanned { get; set; }
     [Parameter] public EventCallback OnExportList { get; set; }
+
+    private void ShowScanner()
+    {
+        _showScanner = true;
+    }
+
+    private async Task HandleBarcode(string barcode)
+    {
+        _showScanner = false;
+        await OnBarcodeScanned.InvokeAsync(barcode);
+    }
 }

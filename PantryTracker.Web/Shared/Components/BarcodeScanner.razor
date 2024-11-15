@@ -1,0 +1,35 @@
+@inject IJSRuntime JSRuntime
+
+<div class="barcode-scanner">
+    <div class="scanner-container">
+        <video id="video" class="scanner-video"></video>
+        <canvas id="canvas" class="scanner-canvas"></canvas>
+    </div>
+    <div class="scanner-controls">
+        <button class="btn btn-primary" @onclick="StartScanning">
+            <i class="fas fa-camera"></i> Start Scanner
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> OnBarcodeScanned { get; set; }
+
+    private IJSObjectReference _module;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/bundle.js");
+    }
+
+    private async Task StartScanning()
+    {
+        await _module.InvokeVoidAsync("startScanning", DotNetObjectReference.Create(this));
+    }
+
+    [JSInvokable]
+    public async Task OnBarcode(string barcode)
+    {
+        await OnBarcodeScanned.InvokeAsync(barcode);
+    }
+}

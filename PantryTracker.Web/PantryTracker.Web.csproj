@@ -18,4 +18,12 @@
     <ProjectReference Include="..\PantryTracker.Infrastructure\PantryTracker.Infrastructure.csproj" />
   </ItemGroup>
 
+  <Target Name="NpmInstall" BeforeTargets="Build">
+    <Exec Command="npm install" />
+  </Target>
+
+  <Target Name="NpmBuild" BeforeTargets="Build" DependsOnTargets="NpmInstall">
+    <Exec Command="npm run build" />
+  </Target>
+
 </Project>

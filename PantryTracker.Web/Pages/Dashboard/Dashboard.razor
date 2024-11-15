@@ -18,7 +18,7 @@
 
     <QuickActions
         OnAddItem="AddNewItem"
-        OnScanBarcode="ScanBarcode"
+        OnBarcodeScanned="HandleBarcode"
         OnExportList="ExportShoppingList" />
 </div>
 
@@ -62,9 +62,11 @@
         NavigationManager.NavigateTo("/fooditems/new");
     }
 
-    private async Task ScanBarcode()
+    private async Task HandleBarcode(string barcode)
     {
-        // Barcode scanning functionality will be implemented later
+        // Handle the scanned barcode
+        Console.WriteLine($"Scanned barcode: {barcode}");
+        // Later we can add lookup functionality here
     }
 
     private async Task ExportShoppingList()
