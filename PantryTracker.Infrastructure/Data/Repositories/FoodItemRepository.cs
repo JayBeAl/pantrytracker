@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using PantryTracker.Core;
 using PantryTracker.Core.Common;
 using PantryTracker.Core.Interfaces;
+using PantryTracker.Core.Models;
 
 namespace PantryTracker.Infrastructure.Data.Repositories;
 

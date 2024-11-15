@@ -1,4 +1,4 @@
-﻿namespace PantryTracker.Core;
+﻿namespace PantryTracker.Core.Models;
 
 public class FoodItem
 {

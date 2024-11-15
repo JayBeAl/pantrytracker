@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PantryTracker.Core;
+using PantryTracker.Core.Models;
 
 namespace PantryTracker.Infrastructure;
 

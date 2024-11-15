@@ -1,4 +1,5 @@
 using PantryTracker.Core.Common;
+using PantryTracker.Core.Models;
 
 namespace PantryTracker.Core.Interfaces;
 
