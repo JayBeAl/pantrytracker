@@ -5,8 +5,11 @@ namespace PantryTracker.Infrastructure;
 
 public class PantryContext : DbContext
 {
-    public DbSet<FoodItem> FoodItems { get; set; }
+    public PantryContext(DbContextOptions<PantryContext> options)
+        : base(options)
+    {
+    }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-        => options.UseSqlite("Data Source=pantry.db");
+    public DbSet<FoodItem> FoodItems { get; set; }
+    public DbSet<NutritionalInfo> NutritionalInfo { get; set; }
 }

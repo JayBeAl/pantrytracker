@@ -1,6 +1,7 @@
 @page "/"
 @using PantryTracker.Core.Interfaces
 @using PantryTracker.Core.Models
+@using PantryTracker.Web.Pages.Dashboard.Components
 @inject IFoodItemService FoodItemService
 @inject NavigationManager NavigationManager
 
@@ -40,14 +41,14 @@
         {
             _totalItems = allItemsResult.Value.Count();
         }
-
+    
         var expiringResult = await FoodItemService.GetExpiringItemsAsync(7);
         if (expiringResult.IsSuccess)
         {
             _expiringItemsList = expiringResult.Value;
             _expiringItems = _expiringItemsList.Count();
         }
-
+    
         var lowStockResult = await FoodItemService.GetLowStockItemsAsync(3);
         if (lowStockResult.IsSuccess)
         {
