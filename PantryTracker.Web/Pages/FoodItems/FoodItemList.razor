@@ -19,11 +19,9 @@
         </div>
     </div>
 }
-else if (_error != null)
+else if (!string.IsNullOrEmpty(_errorMessage))
 {
-    <div class="alert alert-danger" role="alert">
-        @_error
-    </div>
+    <Alert Message="@_errorMessage" Type="AlertType.Error" />
 }
 else if (!_foodItems.Any())
 {
@@ -34,6 +32,11 @@ else if (!_foodItems.Any())
 }
 else
 {
+    @if (!string.IsNullOrEmpty(_successMessage))
+    {
+        <Alert Message="@_successMessage" Type="AlertType.Success" />
+    }
+
     <div class="food-items-grid">
         @foreach (var item in _foodItems)
         {
@@ -48,7 +51,8 @@ else
 @code {
     private IEnumerable<FoodItem> _foodItems = new List<FoodItem>();
     private bool _loading = true;
-    private string _error;
+    private string _errorMessage;
+    private string _successMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,17 +62,16 @@ else
     private async Task LoadFoodItems()
     {
         _loading = true;
-        _error = null;
+        _errorMessage = null;
 
         var result = await FoodItemService.GetAllAsync();
-        
         if (result.IsSuccess)
         {
             _foodItems = result.Value;
         }
         else
         {
-            _error = result.Error;
+            _errorMessage = result.Error;
         }
 
         _loading = false;
@@ -79,11 +82,12 @@ else
         var result = await FoodItemService.DeleteFoodItemAsync(id);
         if (result.IsSuccess)
         {
+            _successMessage = "Item deleted successfully!";
             await LoadFoodItems();
         }
         else
         {
-            _error = result.Error;
+            _errorMessage = result.Error;
         }
     }
 

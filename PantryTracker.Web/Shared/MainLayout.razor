@@ -1,4 +1,6 @@
-﻿@inherits LayoutComponentBase
+﻿@inject NavigationManager NavigationManager
+
+@inherits LayoutComponentBase
 
 <div class="page">
     <div class="sidebar">
@@ -15,6 +17,8 @@
             </div>
         </div>
 
+        <BreadcrumbTrail Items="@_breadcrumbItems" />
+
         <article class="content">
             @Body
         </article>
@@ -23,7 +27,41 @@
 
 @code {
     private bool collapseNavMenu = true;
+    private List<(string Url, string Text)> _breadcrumbItems = new();
 
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += HandleLocationChanged;
+        UpdateBreadcrumb();
+    }
+
+    private void HandleLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        UpdateBreadcrumb();
+        StateHasChanged();
+    }
+
+    private void UpdateBreadcrumb()
+    {
+        var uri = NavigationManager.Uri;
+        var segments = uri.Replace(NavigationManager.BaseUri, "").Split('/');
+        
+        _breadcrumbItems.Clear();
+        _breadcrumbItems.Add(("/", "Home"));
+
+        var path = "";
+        foreach (var segment in segments.Where(s => !string.IsNullOrEmpty(s)))
+        {
+            path += $"/{segment}";
+            _breadcrumbItems.Add((path, char.ToUpper(segment[0]) + segment[1..]));
+        }
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+    
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;

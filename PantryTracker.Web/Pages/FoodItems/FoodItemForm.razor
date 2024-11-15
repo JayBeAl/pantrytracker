@@ -7,9 +7,17 @@
 @inject NavigationManager NavigationManager
 
 <div class="food-item-form">
-    <div class="form-header">
-        <h2>@(_isNew ? "Add New Item" : "Edit Item")</h2>
-    </div>
+    <h3>@(_isNew ? "Add New Item" : "Edit Item")</h3>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <Alert Message="@_errorMessage" Type="AlertType.Error" />
+    }
+
+    @if (!string.IsNullOrEmpty(_successMessage))
+    {
+        <Alert Message="@_successMessage" Type="AlertType.Success" />
+    }
 
     <EditForm Model="@_foodItem" OnValidSubmit="HandleSubmit">
         <DataAnnotationsValidator />
@@ -56,44 +64,85 @@
             <button type="submit" class="btn btn-primary">Save</button>
             <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
         </div>
+<div class="form-actions">
+            <button type="submit" class="btn btn-primary" disabled="@_isProcessing">
+                @if (_isProcessing)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Processing...</span>
+                }
+                else
+                {
+                    <span>Save</span>
+                }
+            </button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+        </div>
     </EditForm>
 </div>
 
 @code {
     [Parameter] public int? Id { get; set; }
-    private FoodItem _foodItem = new() { ExpiryDate = DateTime.Now.AddDays(7) };
+    private FoodItem _foodItem = new();
     private bool _isNew => Id == null;
+    private string _errorMessage;
+    private string _successMessage;
+    private bool _isProcessing;
 
     protected override async Task OnInitializedAsync()
     {
         if (!_isNew)
         {
+            _isProcessing = true;
             var result = await FoodItemService.GetByIdAsync(Id.Value);
             if (result.IsSuccess)
             {
                 _foodItem = result.Value;
             }
+            else
+            {
+                _errorMessage = result.Error;
+            }
+            _isProcessing = false;
         }
     }
 
     private async Task HandleSubmit()
     {
+        _isProcessing = true;
+        _errorMessage = null;
+        _successMessage = null;
+
         if (_isNew)
         {
-            var result = await FoodItemService.AddFoodItemAsync(_foodItem);
-            if (result.IsSuccess)
+            var addResult = await FoodItemService.AddFoodItemAsync(_foodItem);
+            if (addResult.IsSuccess)
             {
+                _successMessage = "Item added successfully!";
+                await Task.Delay(1000);
                 NavigationManager.NavigateTo("/fooditems");
+            }
+            else
+            {
+                _errorMessage = addResult.Error;
             }
         }
         else
         {
-            var result = await FoodItemService.UpdateFoodItemAsync(_foodItem);
-            if (result.IsSuccess)
+            var updateResult = await FoodItemService.UpdateFoodItemAsync(_foodItem);
+            if (updateResult.IsSuccess)
             {
+                _successMessage = "Item updated successfully!";
+                await Task.Delay(1000);
                 NavigationManager.NavigateTo("/fooditems");
             }
+            else
+            {
+                _errorMessage = updateResult.Error;
+            }
         }
+
+        _isProcessing = false;
     }
 
     private void Cancel()
