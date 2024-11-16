@@ -19,9 +19,17 @@ builder.Services.AddDbContext<PantryContext>(options =>
 
 // Repositories
 builder.Services.AddScoped<IFoodItemRepository, FoodItemRepository>();
+builder.Services.AddScoped<IProductCacheRepository, ProductCacheRepository>();
 
 // Services
 builder.Services.AddScoped<IFoodItemService, FoodItemService>();
+
+builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(client =>
+{
+    client.BaseAddress = new Uri("https://world.openfoodfacts.org/api/v2/");
+});
+builder.Services.AddControllers();
+
 
 var app = builder.Build();
 
@@ -45,5 +53,6 @@ app.UseRouting();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+app.MapControllers();
 
 app.Run();

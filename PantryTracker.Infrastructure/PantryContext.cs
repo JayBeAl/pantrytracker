@@ -5,11 +5,11 @@ namespace PantryTracker.Infrastructure;
 
 public class PantryContext : DbContext
 {
-    public PantryContext(DbContextOptions<PantryContext> options)
-        : base(options)
+    public PantryContext(DbContextOptions<PantryContext> options) : base(options)
     {
     }
 
     public DbSet<FoodItem> FoodItems { get; set; }
     public DbSet<NutritionalInfo> NutritionalInfo { get; set; }
+    public DbSet<ProductCache> ProductCache { get; set; }
 }
