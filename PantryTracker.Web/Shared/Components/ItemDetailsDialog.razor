@@ -1,0 +1,54 @@
+@using PantryTracker.Web.Pages.ScanningSession.Models
+@if (Show)
+{
+    <div class="dialog-overlay">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3>Add Item Details</h3>
+                <button class="close-button" @onclick="OnCancel">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <EditForm Model="@_details" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label for="quantity">Quantity</label>
+                    <InputNumber id="quantity" @bind-Value="_details.Quantity" class="form-control" />
+                    <ValidationMessage For="@(() => _details.Quantity)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Storage Location</label>
+                    <InputText id="location" @bind-Value="_details.StorageLocation" class="form-control" />
+                    <ValidationMessage For="@(() => _details.StorageLocation)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="expiryDate">Expiry Date</label>
+                    <InputDate id="expiryDate" @bind-Value="_details.ExpiryDate" class="form-control" />
+                    <ValidationMessage For="@(() => _details.ExpiryDate)" />
+                </div>
+
+                <div class="dialog-actions">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancel</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    private ItemDetails _details = new();
+
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public EventCallback<ItemDetails> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        await OnSave.InvokeAsync(_details);
+    }
+}

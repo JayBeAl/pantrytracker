@@ -19,7 +19,8 @@
     <QuickActions
         OnAddItem="AddNewItem"
         OnBarcodeScanned="HandleBarcode"
-        OnExportList="ExportShoppingList" />
+        OnExportList="ExportShoppingList"
+        OnStartPurchaseScanning="StartPurchaseScanning" />
 </div>
 
 @code {
@@ -64,9 +65,22 @@
 
     private async Task HandleBarcode(string barcode)
     {
-        // Handle the scanned barcode
-        Console.WriteLine($"Scanned barcode: {barcode}");
-        // Later we can add lookup functionality here
+        var result = await FoodItemService.GetByBarcodeAsync(barcode);
+        if (result.IsSuccess)
+        {
+            // Item exists, navigate to edit
+            NavigationManager.NavigateTo($"/fooditems/edit/{result.Value.Id}");
+        }
+        else
+        {
+            // Item doesn't exist, navigate to new with barcode
+            NavigationManager.NavigateTo($"/fooditems/new?barcode={barcode}");
+        }
+    }
+
+    private async Task StartPurchaseScanning()
+    {
+        NavigationManager.NavigateTo("/scanning-session");
     }
 
     private async Task ExportShoppingList()

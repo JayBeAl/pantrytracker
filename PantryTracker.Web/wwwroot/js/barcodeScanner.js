@@ -2,6 +2,7 @@ import {BarcodeFormat, BrowserMultiFormatReader, DecodeHintType} from '@zxing/li
 
 let codeReader;
 let dotNetHelper;
+let isProcessingEnabled = true;
 
 async function requestCameraPermission() {
     try {
@@ -48,13 +49,11 @@ export async function startScanning(helper) {
     }
 }
 
-
 function startDecoding(selectedDeviceId) {
     codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
-        if (result) {
+        if (result && isProcessingEnabled) {
             console.log('Barcode detected:', result.text);
             dotNetHelper.invokeMethodAsync('OnBarcode', result.text);
-            stopScanning();
         }
         if (err && !(err.name === 'NotFoundException')) {
             console.error('Decoding error:', err);
@@ -67,4 +66,12 @@ export function stopScanning() {
         codeReader.reset();
         codeReader = null;
     }
+}
+
+export function pauseScanning() {
+    isProcessingEnabled = false;
+}
+
+export function resumeScanning() {
+    isProcessingEnabled = true;
 }

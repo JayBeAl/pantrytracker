@@ -4,6 +4,10 @@
         <i class="fas fa-plus"></i>
         Add Item
     </button>
+    <button class="action-button" @onclick="StartPurchaseScanning">
+        <i class="fas fa-shopping-basket"></i>
+        Add Purchases
+    </button>
     <button class="action-button" @onclick="ShowScanner">
         <i class="fas fa-barcode"></i>
         Scan Barcode
@@ -27,6 +31,7 @@
     [Parameter] public EventCallback OnAddItem { get; set; }
     [Parameter] public EventCallback<string> OnBarcodeScanned { get; set; }
     [Parameter] public EventCallback OnExportList { get; set; }
+    [Parameter] public EventCallback OnStartPurchaseScanning { get; set; }
 
     private void ShowScanner()
     {
@@ -37,5 +42,10 @@
     {
         _showScanner = false;
         await OnBarcodeScanned.InvokeAsync(barcode);
+    }
+
+    private async Task StartPurchaseScanning()
+    {
+        await OnStartPurchaseScanning.InvokeAsync();
     }
 }

@@ -18,6 +18,11 @@
     <ProjectReference Include="..\PantryTracker.Infrastructure\PantryTracker.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Pages\ScanningSession\Components\" />
+    <Folder Include="wwwroot\sounds\" />
+  </ItemGroup>
+
   <Target Name="NpmInstall" BeforeTargets="Build">
     <Exec Command="npm install" />
   </Target>

@@ -5,26 +5,23 @@
         <video id="video" class="scanner-video"></video>
         <canvas id="canvas" class="scanner-canvas"></canvas>
     </div>
-    <div class="scanner-controls">
-        <button class="btn btn-primary" @onclick="StartScanning">
-            <i class="fas fa-camera"></i> Start Scanner
-        </button>
-    </div>
 </div>
 
 @code {
     [Parameter] public EventCallback<string> OnBarcodeScanned { get; set; }
+    [Parameter] public bool Continuous { get; set; }
 
     private IJSObjectReference _module;
 
     protected override async Task OnInitializedAsync()
     {
-        _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/bundle.js");
+        _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/dist/barcodeScanner.js");
+        await StartScanning();
     }
 
-    private async Task StartScanning()
+    public async Task StartScanning()
     {
-        await _module.InvokeVoidAsync("startScanning", DotNetObjectReference.Create(this));
+        await _module.InvokeVoidAsync("startScanning", DotNetObjectReference.Create(this), Continuous);
     }
 
     [JSInvokable]

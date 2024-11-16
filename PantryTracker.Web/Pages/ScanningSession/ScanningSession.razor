@@ -1,0 +1,101 @@
+@page "/scanning-session"
+@using PantryTracker.Core.Interfaces
+@using PantryTracker.Web.Pages.ScanningSession.Models
+@using PantryTracker.Web.Shared.Components
+@inject IFoodItemService FoodItemService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="scanning-session">
+    <div class="session-header">
+        <h2>Scanning Session</h2>
+        <button class="btn btn-secondary" @onclick="EndSession">
+            <i class="fas fa-times"></i> End Session
+        </button>
+    </div>
+
+    <BarcodeScanner @ref="_scanner" OnBarcodeScanned="HandleBarcode" Continuous="true" />
+
+    <div class="scanned-items">
+        <h3>Scanned Items (@_scannedItems.Count)</h3>
+        <div class="items-list">
+            @foreach (var item in _scannedItems.OrderByDescending(x => x.Timestamp))
+            {
+                <div class="scanned-item @(item.IsProcessed ? "processed" : "")">
+                    <span>@item.Name</span>
+                    <span>@item.Barcode</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (_showDialog)
+    {
+        <ItemDetailsDialog
+            Show="true"
+            OnSave="HandleDetailsSave"
+            OnCancel="HandleDetailsCancel" />
+    }
+</div>
+
+@code {
+    private List<ScannedItem> _scannedItems = new();
+    private bool _showDialog;
+    private ScannedItem _currentItem;
+    private IJSObjectReference _scannerModule;
+    private IJSObjectReference _sessionModule;
+    private BarcodeScanner _scanner;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _scannerModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/dist/barcodeScanner.js");
+        _sessionModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/dist/scanningSession.js");
+    }
+
+    private async Task HandleBarcode(string barcode)
+    {
+        await _scannerModule.InvokeVoidAsync("pauseScanning");
+        await _sessionModule.InvokeVoidAsync("playSuccessSound");
+
+        _currentItem = new ScannedItem
+        {
+            Barcode = barcode,
+            Timestamp = DateTime.Now,
+            IsProcessed = false
+        };
+
+        var existingItem = await FoodItemService.GetByBarcodeAsync(barcode);
+        if (existingItem.IsSuccess)
+        {
+            _currentItem.Name = existingItem.Value.Name;
+        }
+        else
+        {
+            _currentItem.Name = "New Item";
+        }
+
+        _scannedItems.Add(_currentItem);
+        _showDialog = true;
+        StateHasChanged();
+    }
+
+    private async Task HandleDetailsSave(ItemDetails details)
+    {
+        _currentItem.IsProcessed = true;
+        _showDialog = false;
+        await _scannerModule.InvokeVoidAsync("resumeScanning");
+        StateHasChanged();
+    }
+
+    private async Task HandleDetailsCancel()
+    {
+        _showDialog = false;
+        await _scannerModule.InvokeVoidAsync("resumeScanning");
+        StateHasChanged();
+    }
+
+    private void EndSession()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

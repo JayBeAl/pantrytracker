@@ -10,3 +10,5 @@
 @import 'components/dashboard/low-stock-list.css';
 @import 'components/dashboard/quick-actions.css';
 @import 'components/barcode-scanner.css';
+@import 'components/scanning-session/scanning-session.css';
+@import 'components/item-details-dialog.css';

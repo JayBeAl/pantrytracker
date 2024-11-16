@@ -2,9 +2,12 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
 export default {
-    input: './wwwroot/js/barcodeScanner.js',
+    input: [
+        './wwwroot/js/barcodeScanner.js',
+        './wwwroot/js/scanningSession.js'
+    ],
     output: {
-        file: './wwwroot/js/bundle.js',
+        dir: './wwwroot/js/dist',
         format: 'es'
     },
     plugins: [
