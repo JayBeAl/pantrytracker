@@ -363,3 +363,6 @@ fabric.properties
 *.db
 *.db-shm
 *.db-wal
+
+# js
+bundle.js
