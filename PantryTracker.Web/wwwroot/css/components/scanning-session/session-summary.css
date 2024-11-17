@@ -95,11 +95,14 @@
 
 .summary-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
+    justify-content: center;
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid #e2e8f0;
+}
+
+.summary-actions .btn {
+    min-width: 120px;
 }
 
 @media (min-width: 768px) {

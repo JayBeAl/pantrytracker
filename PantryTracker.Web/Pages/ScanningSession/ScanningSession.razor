@@ -31,8 +31,7 @@
     {
         <SessionSummary 
             SessionState="@_sessionState"
-            OnFinish="FinishSession"
-            OnContinue="ContinueSession" />
+            OnFinish="FinishSession" />
     }
 
     <BarcodeScanner @ref="_scanner" OnBarcodeScanned="HandleBarcode" Continuous="true" />
@@ -194,12 +193,6 @@
         _showSummary = true;
         _currentState = ScanningState.Complete;
         StateHasChanged();
-    }
-
-    private async Task ContinueSession()
-    {
-        _showSummary = false;
-        await _scannerModule.InvokeVoidAsync("resumeScanning");
     }
 
     private async Task FinishSession()

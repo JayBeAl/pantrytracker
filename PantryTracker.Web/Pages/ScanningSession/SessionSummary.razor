@@ -34,12 +34,10 @@
 
     <div class="summary-actions">
         <button class="btn btn-primary" @onclick="OnFinish">Finish</button>
-        <button class="btn btn-secondary" @onclick="OnContinue">Continue Scanning</button>
     </div>
 </div>
 
 @code {
     [Parameter] public ScanningSessionState SessionState { get; set; }
     [Parameter] public EventCallback OnFinish { get; set; }
-    [Parameter] public EventCallback OnContinue { get; set; }
 }
