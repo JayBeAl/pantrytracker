@@ -58,7 +58,7 @@ public class OpenFoodFactsService : IOpenFoodFactsService
                 Name = response.Product.ProductName,
                 Brand = response.Product.Brands ?? "Unknown",
                 ImageUrl = response.Product.ImageUrl,
-                Category = response.Product.Categories,
+                Category = response.Product.Categories ?? "Unknown",
                 ServingSize = response.Product.ServingSize,
                 EnergyKcal = response.Product.Nutriments.EnergyKcal,
                 Proteins = response.Product.Nutriments.Proteins,

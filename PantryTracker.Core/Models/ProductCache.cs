@@ -5,12 +5,12 @@ namespace PantryTracker.Core.Models;
 public class ProductCache
 {
     [Key]
-    public string Barcode { get; set; }
-    public string Name { get; set; }
-    public string Brand { get; set; }
-    public string ImageUrl { get; set; }
-    public string Category { get; set; }
-    public string? ServingSize { get; set; }
+    public string Barcode { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Brand { get; set; } = string.Empty;
+    public string ImageUrl { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string? ServingSize { get; set; } = string.Empty;
     public decimal? EnergyKcal { get; set; }
     public decimal? Proteins { get; set; }
     public decimal? Carbohydrates { get; set; }
