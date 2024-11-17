@@ -40,6 +40,7 @@ public class FoodItemRepository : IFoodItemRepository
     {
         var items = await _context.FoodItems
             .Include(f => f.NutritionalInfo)
+            .OrderBy(f => f.Name)
             .ToListAsync();
 
         return Result<IEnumerable<FoodItem>>.Success(items);
@@ -62,9 +63,45 @@ public class FoodItemRepository : IFoodItemRepository
         var items = await _context.FoodItems
             .Include(f => f.NutritionalInfo)
             .Where(f => f.StorageLocation == location)
+            .OrderBy(f => f.Name)
             .ToListAsync();
 
         return Result<IEnumerable<FoodItem>>.Success(items);
+    }
+
+    public async Task<Result<IEnumerable<FoodItem>>> GetByCategoryAsync(string category)
+    {
+        var items = await _context.FoodItems
+            .Include(f => f.NutritionalInfo)
+            .Where(f => f.Category == category)
+            .OrderBy(f => f.Name)
+            .ToListAsync();
+
+        return Result<IEnumerable<FoodItem>>.Success(items);
+    }
+
+    public async Task<Result<IEnumerable<string>>> GetAllCategoriesAsync()
+    {
+        var categories = await _context.FoodItems
+            .Select(f => f.Category)
+            .Distinct()
+            .Where(c => !string.IsNullOrEmpty(c))
+            .OrderBy(c => c)
+            .ToListAsync();
+
+        return Result<IEnumerable<string>>.Success(categories);
+    }
+
+    public async Task<Result<IEnumerable<string>>> GetAllLocationsAsync()
+    {
+        var locations = await _context.FoodItems
+            .Select(f => f.StorageLocation)
+            .Distinct()
+            .Where(l => !string.IsNullOrEmpty(l))
+            .OrderBy(l => l)
+            .ToListAsync();
+
+        return Result<IEnumerable<string>>.Success(locations);
     }
 
     public async Task<Result<bool>> AddAsync(FoodItem foodItem)
@@ -100,8 +137,7 @@ public class FoodItemRepository : IFoodItemRepository
                 {
                     existingItem.NutritionalInfo = new NutritionalInfo();
                 }
-                _context.Entry(existingItem.NutritionalInfo)
-                    .CurrentValues.SetValues(foodItem.NutritionalInfo);
+                _context.Entry(existingItem.NutritionalInfo).CurrentValues.SetValues(foodItem.NutritionalInfo);
             }
 
             await _context.SaveChangesAsync();
@@ -117,7 +153,10 @@ public class FoodItemRepository : IFoodItemRepository
     {
         try
         {
-            var foodItem = await _context.FoodItems.FindAsync(id);
+            var foodItem = await _context.FoodItems
+                .Include(f => f.NutritionalInfo)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
             if (foodItem == null)
                 return Result<bool>.Failure($"FoodItem with ID {id} not found.");
 

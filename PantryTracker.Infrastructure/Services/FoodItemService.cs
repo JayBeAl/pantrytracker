@@ -165,7 +165,7 @@ public class FoodItemService : IFoodItemService
             ExpiryDate = DateTime.Now.AddMonths(1), // Default expiry date
             NutritionalInfo = new NutritionalInfo
             {
-                Energy = product.EnergyKcal ?? 0,
+                EnergyKcal = product.EnergyKcal ?? 0,
                 Proteins = product.Proteins ?? 0,
                 Carbohydrates = product.Carbohydrates ?? 0,
                 Fat = product.Fat ?? 0

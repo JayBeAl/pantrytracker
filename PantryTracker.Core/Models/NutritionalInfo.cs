@@ -1,13 +1,20 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace PantryTracker.Core.Models;
 
 public class NutritionalInfo
 {
-    public int Id { get; set; }  // This will be the primary key
-    public int Energy { get; set; }
-    public int Proteins { get; set; }
-    public int Carbohydrates { get; set; }
-    public int Fat { get; set; }
+    [Key]
+    public int Id { get; set; }
+
+    [ForeignKey("FoodItem")]
+    public int FoodItemId { get; set; }
     
-    public int FoodItemId { get; set; }  // Foreign key
+    public decimal? EnergyKcal { get; set; }
+    public decimal? Proteins { get; set; }
+    public decimal? Carbohydrates { get; set; }
+    public decimal? Fat { get; set; }
+    
     public FoodItem FoodItem { get; set; }
 }

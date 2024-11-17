@@ -4,10 +4,13 @@
 @using PantryTracker.Core.Models
 @using PantryTracker.Web.Shared.Components
 @inject IFoodItemService FoodItemService
+@inject IOpenFoodFactsService OpenFoodFactsService
 @inject NavigationManager NavigationManager
 
 <div class="food-item-form">
-    <h3>@(_isNew ? "Add New Item" : "Edit Item")</h3>
+    <div class="form-header">
+        <h2>@(_isNew ? "Add New Item" : "Edit Item")</h2>
+    </div>
 
     @if (!string.IsNullOrEmpty(_errorMessage))
     {
@@ -22,32 +25,8 @@
     <EditForm Model="@_foodItem" OnValidSubmit="HandleSubmit">
         <DataAnnotationsValidator />
 
-        <div class="form-group">
-            <label for="name">Name</label>
-            <InputText id="name" @bind-Value="_foodItem.Name" class="form-control" />
-            <ValidationMessage For="@(() => _foodItem.Name)" />
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label for="quantity">Quantity</label>
-                <InputNumber id="quantity" @bind-Value="_foodItem.Quantity" class="form-control" />
-                <ValidationMessage For="@(() => _foodItem.Quantity)" />
-            </div>
-
-            <div class="form-group">
-                <label for="location">Storage Location</label>
-                <InputText id="location" @bind-Value="_foodItem.StorageLocation" class="form-control" />
-                <ValidationMessage For="@(() => _foodItem.StorageLocation)" />
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label for="expiryDate">Expiry Date</label>
-                <InputDate id="expiryDate" @bind-Value="_foodItem.ExpiryDate" class="form-control" />
-                <ValidationMessage For="@(() => _foodItem.ExpiryDate)" />
-            </div>
+        <div class="form-section">
+            <h3 class="section-title">Product Information</h3>
 
             <div class="form-group">
                 <label for="barcode">Barcode</label>
@@ -56,9 +35,68 @@
                     <button type="button" class="btn btn-secondary" @onclick="ScanBarcode">
                         <i class="fas fa-barcode"></i>
                     </button>
+                    <button type="button" class="btn btn-primary" @onclick="LookupProduct">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            @if (_productFound)
+            {
+                <div class="product-preview">
+                    @if (!string.IsNullOrEmpty(_foodItem.ImageUrl))
+                    {
+                        <img src="@_foodItem.ImageUrl" alt="@_foodItem.Name" class="product-image" />
+                    }
+                    <div class="product-info">
+                        <div class="brand">@_foodItem.Brand</div>
+                        <h4>@_foodItem.Name</h4>
+                        <div class="category">@_foodItem.Category</div>
+                    </div>
+                </div>
+            }
+
+            <div class="form-group">
+                <label for="name">Name</label>
+                <InputText id="name" @bind-Value="_foodItem.Name" class="form-control" />
+                <ValidationMessage For="@(() => _foodItem.Name)" />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="brand">Brand</label>
+                    <InputText id="brand" @bind-Value="_foodItem.Brand" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <InputText id="category" @bind-Value="_foodItem.Category" class="form-control" />
                 </div>
             </div>
         </div>
+
+        <div class="form-section">
+            <h3 class="section-title">Storage Details</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="quantity">Quantity</label>
+                    <InputNumber id="quantity" @bind-Value="_foodItem.Quantity" class="form-control" />
+                    <ValidationMessage For="@(() => _foodItem.Quantity)" />
+                </div>
+                <div class="form-group">
+                    <label for="location">Storage Location</label>
+                    <InputText id="location" @bind-Value="_foodItem.StorageLocation" class="form-control" />
+                    <ValidationMessage For="@(() => _foodItem.StorageLocation)" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="expiryDate">Expiry Date</label>
+                <InputDate id="expiryDate" @bind-Value="_foodItem.ExpiryDate" class="form-control" />
+                <ValidationMessage For="@(() => _foodItem.ExpiryDate)" />
+            </div>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary" disabled="@_isProcessing">
                 @if (_isProcessing)
@@ -83,6 +121,7 @@
     private string _errorMessage;
     private string _successMessage;
     private bool _isProcessing;
+    private bool _productFound;
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,6 +132,7 @@
             if (result.IsSuccess)
             {
                 _foodItem = result.Value;
+                _productFound = !string.IsNullOrEmpty(_foodItem.Brand);
             }
             else
             {
@@ -100,6 +140,36 @@
             }
             _isProcessing = false;
         }
+    }
+
+    private async Task LookupProduct()
+    {
+        if (string.IsNullOrWhiteSpace(_foodItem.Barcode))
+        {
+            _errorMessage = "Please enter a barcode first";
+            return;
+        }
+
+        _isProcessing = true;
+        _errorMessage = null;
+
+        var result = await OpenFoodFactsService.GetProductByBarcodeAsync(_foodItem.Barcode);
+        if (result.IsSuccess)
+        {
+            var product = result.Value;
+            _foodItem.Name = product.Name;
+            _foodItem.Brand = product.Brand;
+            _foodItem.Category = product.Category;
+            _foodItem.ImageUrl = product.ImageUrl;
+            _productFound = true;
+        }
+        else
+        {
+            _errorMessage = result.Error;
+            _productFound = false;
+        }
+
+        _isProcessing = false;
     }
 
     private async Task HandleSubmit()

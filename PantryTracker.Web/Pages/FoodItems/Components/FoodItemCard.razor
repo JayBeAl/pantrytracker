@@ -3,18 +3,32 @@
 
 <div class="food-item-card">
     <div class="card-header">
-        <div class="header-content">
-            <h4 class="item-name">@Item.Name</h4>
-            <span class="badge @GetExpiryBadgeClass()">
-                <i class="fas @GetExpiryIcon() me-2"></i>
-                Expires: @Item.ExpiryDate.ToShortDateString()
-            </span>
+        <div class="product-info">
+            @if (!string.IsNullOrEmpty(Item.ImageUrl))
+            {
+                <img src="@Item.ImageUrl" alt="@Item.Name" class="product-image" />
+            }
+            <div class="product-details">
+                @if (!string.IsNullOrEmpty(Item.Brand))
+                {
+                    <div class="brand">@Item.Brand</div>
+                }
+                <h4 class="item-name">@Item.Name</h4>
+                @if (!string.IsNullOrEmpty(Item.Category))
+                {
+                    <span class="category">@Item.Category</span>
+                }
+                <span class="expiry-badge @GetExpiryBadgeClass()">
+                    <i class="fas @GetExpiryIcon()"></i>
+                    Expires: @Item.ExpiryDate.ToShortDateString()
+                </span>
+            </div>
         </div>
         <div class="header-actions">
-            <button class="btn btn-icon" @onclick="() => OnEdit.InvokeAsync(Item.Id)" title="Edit Item">
+            <button class="btn-icon" @onclick="() => OnEdit.InvokeAsync(Item.Id)" title="Edit Item">
                 <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-icon" @onclick="HandleDelete" title="Delete Item">
+            <button class="btn-icon" @onclick="HandleDelete" title="Delete Item">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
@@ -30,16 +44,32 @@
                 <span class="label">Location</span>
                 <span class="value">@Item.StorageLocation</span>
             </div>
-            @if (!string.IsNullOrEmpty(Item.Barcode))
-            {
-                <div class="detail">
-                    <span class="label">Barcode</span>
-                    <span class="value">@Item.Barcode</span>
-                </div>
-            }
         </div>
+
+        @if (Item.NutritionalInfo != null)
+        {
+            <div class="nutritional-info">
+                <div class="nutrient">
+                    <div class="nutrient-label">Energy</div>
+                    <div class="nutrient-value">@Item.NutritionalInfo.EnergyKcal kcal</div>
+                </div>
+                <div class="nutrient">
+                    <div class="nutrient-label">Protein</div>
+                    <div class="nutrient-value">@Item.NutritionalInfo.Proteins g</div>
+                </div>
+                <div class="nutrient">
+                    <div class="nutrient-label">Carbs</div>
+                    <div class="nutrient-value">@Item.NutritionalInfo.Carbohydrates g</div>
+                </div>
+                <div class="nutrient">
+                    <div class="nutrient-label">Fat</div>
+                    <div class="nutrient-value">@Item.NutritionalInfo.Fat g</div>
+                </div>
+            </div>
+        }
     </div>
 </div>
+
 
 @code {
     [Parameter] public FoodItem Item { get; set; }
