@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PantryTracker.Core.Interfaces;
 using PantryTracker.Infrastructure;
@@ -28,7 +29,12 @@ builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(clie
 {
     client.BaseAddress = new Uri("https://world.openfoodfacts.org/api/v2/");
 });
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
 
 
 var app = builder.Build();

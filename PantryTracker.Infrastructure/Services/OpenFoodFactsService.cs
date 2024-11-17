@@ -95,10 +95,11 @@ public class OpenFoodFactsService : IOpenFoodFactsService
             ImageUrl = cache.ImageUrl,
             Category = cache.Category,
             ServingSize = cache.ServingSize,
-            EnergyKcal = cache.EnergyKcal,
-            Proteins = cache.Proteins,
-            Carbohydrates = cache.Carbohydrates,
-            Fat = cache.Fat
+            EnergyKcal = (int?)cache.EnergyKcal,
+            Proteins = (int?)cache.Proteins,
+            Carbohydrates = (int?)cache.Carbohydrates,
+            Fat = (int?)cache.Fat
         };
     }
+
 }

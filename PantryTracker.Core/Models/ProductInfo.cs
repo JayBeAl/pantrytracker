@@ -8,8 +8,9 @@ public class ProductInfo
     public string ImageUrl { get; set; }
     public string Category { get; set; }
     public string ServingSize { get; set; }
-    public decimal? EnergyKcal { get; set; }
-    public decimal? Proteins { get; set; }
-    public decimal? Carbohydrates { get; set; }
-    public decimal? Fat { get; set; }
+    public int? EnergyKcal { get; set; }
+    public int? Proteins { get; set; }
+    public int? Carbohydrates { get; set; }
+    public int? Fat { get; set; }
 }
+

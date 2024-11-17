@@ -15,4 +15,7 @@ public interface IFoodItemService
     Task<Result<bool>> UpdateFoodItemAsync(FoodItem item);
     Task<Result<bool>> UpdateQuantityAsync(int id, int newQuantity);
     Task<Result<bool>> DeleteFoodItemAsync(int id);
+    Task<Result<bool>> CheckBarcodeExistsAsync(string barcode);
+    Task<Result<FoodItem>> CreateFromOpenFoodFactsAsync(string barcode, int quantity, string storageLocation);
+    Task<Result<FoodItem>> QuickAddWithDetailsAsync(string barcode, int quantity, string storageLocation, DateTime expiryDate);
 }

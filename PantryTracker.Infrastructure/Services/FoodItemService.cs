@@ -7,10 +7,12 @@ namespace PantryTracker.Infrastructure.Services;
 public class FoodItemService : IFoodItemService
 {
     private readonly IFoodItemRepository _repository;
+    private readonly IOpenFoodFactsService _openFoodFactsService;
 
-    public FoodItemService(IFoodItemRepository repository)
+    public FoodItemService(IFoodItemRepository repository, IOpenFoodFactsService openFoodFactsService)
     {
         _repository = repository;
+        _openFoodFactsService = openFoodFactsService;
     }
 
     public async Task<Result<FoodItem>> GetByIdAsync(int id)
@@ -133,4 +135,63 @@ public class FoodItemService : IFoodItemService
 
         return Result<bool>.Success(true);
     }
+    
+    public async Task<Result<bool>> CheckBarcodeExistsAsync(string barcode)
+    {
+        if (string.IsNullOrWhiteSpace(barcode))
+        {
+            return Result<bool>.Failure("Barcode cannot be empty");
+        }
+
+        var foodItem = await _repository.GetByBarcodeAsync(barcode);
+        return Result<bool>.Success(foodItem.IsSuccess);
+    }
+
+    public async Task<Result<FoodItem>> CreateFromOpenFoodFactsAsync(string barcode, int quantity, string storageLocation)
+    {
+        var productResult = await _openFoodFactsService.GetProductByBarcodeAsync(barcode);
+        if (!productResult.IsSuccess)
+        {
+            return Result<FoodItem>.Failure(productResult.Error);
+        }
+
+        var product = productResult.Value;
+        var foodItem = new FoodItem
+        {
+            Name = product.Name,
+            Barcode = barcode,
+            Quantity = quantity,
+            StorageLocation = storageLocation,
+            ExpiryDate = DateTime.Now.AddMonths(1), // Default expiry date
+            NutritionalInfo = new NutritionalInfo
+            {
+                Energy = product.EnergyKcal ?? 0,
+                Proteins = product.Proteins ?? 0,
+                Carbohydrates = product.Carbohydrates ?? 0,
+                Fat = product.Fat ?? 0
+            }
+        };
+
+        var result = await _repository.AddAsync(foodItem);
+        return result.IsSuccess 
+            ? Result<FoodItem>.Success(foodItem) 
+            : Result<FoodItem>.Failure(result.Error);
+    }
+    
+    public async Task<Result<FoodItem>> QuickAddWithDetailsAsync(string barcode, int quantity, string storageLocation, DateTime expiryDate)
+    {
+        var existingItem = await GetByBarcodeAsync(barcode);
+        if (existingItem.IsSuccess)
+        {
+            var item = existingItem.Value;
+            item.Quantity += quantity;
+            var updateResult = await UpdateFoodItemAsync(item);
+            return updateResult.IsSuccess 
+                ? Result<FoodItem>.Success(item) 
+                : Result<FoodItem>.Failure(updateResult.Error);
+        }
+
+        return await CreateFromOpenFoodFactsAsync(barcode, quantity, storageLocation);
+    }
+
 }
