@@ -5,6 +5,7 @@ using PantryTracker.Infrastructure;
 using PantryTracker.Infrastructure.Data;
 using PantryTracker.Infrastructure.Data.Repositories;
 using PantryTracker.Infrastructure.Services;
+using PantryTracker.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,9 @@ builder.Services.AddDbContext<PantryContext>(options =>
 // Repositories
 builder.Services.AddScoped<IFoodItemRepository, FoodItemRepository>();
 builder.Services.AddScoped<IProductCacheRepository, ProductCacheRepository>();
+builder.Services.AddScoped<SessionStorage>();
+
+
 
 // Services
 builder.Services.AddScoped<IFoodItemService, FoodItemService>();

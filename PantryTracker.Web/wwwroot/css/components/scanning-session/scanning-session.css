@@ -11,6 +11,25 @@
     align-items: center;
 }
 
+.session-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-ready { background: #e2e8f0; color: #2d3748; }
+.status-scanning { background: #c6f6d5; color: #22543d; }
+.status-processing { background: #bee3f8; color: #2c5282; }
+.status-awaiting { background: #fefcbf; color: #744210; }
+.status-error { background: #fed7d7; color: #822727; }
+
 .scanned-items {
     background: white;
     padding: 1.5rem;
@@ -28,6 +47,7 @@
 .scanned-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 0.75rem;
     background: #f8f9fa;
     border-radius: 4px;
@@ -37,3 +57,33 @@
 .scanned-item.processed {
     background-color: #e8f5e9;
 }
+
+.item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.item-name {
+    font-weight: 500;
+}
+
+.item-barcode {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.item-status {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-info { background: #ebf8ff; color: #2c5282; }
+.badge-success { background: #c6f6d5; color: #22543d; }

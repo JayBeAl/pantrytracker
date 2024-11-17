@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <Folder Include="Pages\ScanningSession\Components\" />
+    <Folder Include="Services\" />
     <Folder Include="wwwroot\sounds\" />
   </ItemGroup>
 

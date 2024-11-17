@@ -23,6 +23,12 @@ async function requestCameraPermission() {
 export async function startScanning(helper) {
     console.log('Starting scanner...');
 
+    // Reset any existing scanner
+    if (codeReader) {
+        codeReader.reset();
+        codeReader = null;
+    }
+
     if (!await requestCameraPermission()) {
         return;
     }
