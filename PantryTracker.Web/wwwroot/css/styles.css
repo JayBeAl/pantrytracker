@@ -13,3 +13,13 @@
 @import 'components/scanning-session/scanning-session.css';
 @import 'components/item-details-dialog.css';
 @import 'components/scanning-session/session-summary.css';
+
+
+:root {
+    --primary-color: #2563eb;
+    --primary-color-dark: #1d4ed8;
+    --secondary-color: #f3f4f6;
+    --secondary-color-hover: #e5e7eb;
+    --text-color: #1f2937;
+    --border-color: #d1d5db;
+}

@@ -6,6 +6,20 @@
 @inject NavigationManager NavigationManager
 
 <div class="dashboard">
+    <div class="dashboard-actions">
+        <button class="primary-action" @onclick="StartPurchaseScanning">
+            Add Purchases
+        </button>
+        <div class="secondary-actions">
+            <button class="secondary-action" @onclick="AddNewItem">
+                Add Single Item
+            </button>
+            <button class="secondary-action" @onclick="ExportShoppingList">
+                Export Shopping List
+            </button>
+        </div>
+    </div>
+
     <DashboardStats
         TotalItems="_totalItems"
         ExpiringItems="_expiringItems"
@@ -15,12 +29,6 @@
         <ExpiringItemsList Items="_expiringItemsList" />
         <LowStockList Items="_lowStockItemsList" />
     </div>
-
-    <QuickActions
-        OnAddItem="AddNewItem"
-        OnBarcodeScanned="HandleBarcode"
-        OnExportList="ExportShoppingList"
-        OnStartPurchaseScanning="StartPurchaseScanning" />
 </div>
 
 @code {
@@ -68,12 +76,10 @@
         var result = await FoodItemService.GetByBarcodeAsync(barcode);
         if (result.IsSuccess)
         {
-            // Item exists, navigate to edit
             NavigationManager.NavigateTo($"/fooditems/edit/{result.Value.Id}");
         }
         else
         {
-            // Item doesn't exist, navigate to new with barcode
             NavigationManager.NavigateTo($"/fooditems/new?barcode={barcode}");
         }
     }
