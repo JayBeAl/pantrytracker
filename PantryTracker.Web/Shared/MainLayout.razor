@@ -1,16 +1,15 @@
 ﻿@inject NavigationManager NavigationManager
-
 @inherits LayoutComponentBase
 
 <div class="page">
-    <div class="sidebar">
+    <div class="sidebar @(collapseNavMenu ? "" : "expanded")">
         <NavMenu />
     </div>
 
     <main>
         <div class="top-bar">
             <div class="menu-button" @onclick="ToggleNavMenu">
-                <i class="fas fa-bars"></i>
+                <i class="fas @(collapseNavMenu ? "fa-bars" : "fa-times")"></i>
             </div>
             <div class="app-title">
                 <h1>PantryTracker</h1>
@@ -38,6 +37,7 @@
     private void HandleLocationChanged(object sender, LocationChangedEventArgs e)
     {
         UpdateBreadcrumb();
+        collapseNavMenu = true;
         StateHasChanged();
     }
 
@@ -45,7 +45,7 @@
     {
         var uri = NavigationManager.Uri;
         var segments = uri.Replace(NavigationManager.BaseUri, "").Split('/');
-        
+
         _breadcrumbItems.Clear();
         _breadcrumbItems.Add(("/", "Home"));
 
@@ -61,7 +61,7 @@
     {
         NavigationManager.LocationChanged -= HandleLocationChanged;
     }
-    
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
