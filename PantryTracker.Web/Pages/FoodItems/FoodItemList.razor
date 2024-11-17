@@ -6,9 +6,12 @@
 @inject NavigationManager NavigationManager
 
 <div class="page-header">
-    <h1>Pantry Items</h1>
+    <div class="header-content">
+        <h1>Pantry Items</h1>
+        <p class="text-muted">Manage your food inventory</p>
+    </div>
     <button class="btn btn-primary" @onclick="AddNewItem">
-        <i class="fas fa-plus"></i> Add Item
+        <i class="fas fa-plus me-2"></i> Add Item
     </button>
 </div>
 
@@ -27,8 +30,12 @@ else if (!string.IsNullOrEmpty(_errorMessage))
 else if (!_foodItems.Any())
 {
     <div class="empty-state">
-        <p>No items in your pantry yet.</p>
-        <button class="btn btn-primary" @onclick="AddNewItem">Add your first item</button>
+        <i class="fas fa-box-open fa-3x mb-4"></i>
+        <h3>No Items Yet</h3>
+        <p>Start tracking your pantry items by adding your first item.</p>
+        <button class="btn btn-primary mt-3" @onclick="AddNewItem">
+            <i class="fas fa-plus me-2"></i> Add First Item
+        </button>
     </div>
 }
 else
@@ -41,13 +48,14 @@ else
     <div class="food-items-grid">
         @foreach (var item in _foodItems)
         {
-            <FoodItemCard 
-                Item="@item" 
+            <FoodItemCard
+                Item="@item"
                 OnDelete="@DeleteItem"
                 OnEdit="@EditItem" />
         }
     </div>
 }
+
 
 @code {
     private IEnumerable<FoodItem> _foodItems = new List<FoodItem>();

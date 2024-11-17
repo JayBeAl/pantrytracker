@@ -1,18 +1,20 @@
 @using PantryTracker.Core.Models
 @inject IJSRuntime JsRuntime
+
 <div class="food-item-card">
     <div class="card-header">
         <div class="header-content">
             <h4 class="item-name">@Item.Name</h4>
             <span class="badge @GetExpiryBadgeClass()">
+                <i class="fas @GetExpiryIcon() me-2"></i>
                 Expires: @Item.ExpiryDate.ToShortDateString()
             </span>
         </div>
         <div class="header-actions">
-            <button class="btn btn-icon" @onclick="() => OnEdit.InvokeAsync(Item.Id)">
+            <button class="btn btn-icon" @onclick="() => OnEdit.InvokeAsync(Item.Id)" title="Edit Item">
                 <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-icon" @onclick="HandleDelete">
+            <button class="btn btn-icon" @onclick="HandleDelete" title="Delete Item">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
@@ -21,17 +23,17 @@
     <div class="card-body">
         <div class="item-details">
             <div class="detail">
-                <span class="label">Quantity:</span>
+                <span class="label">Quantity</span>
                 <span class="value">@Item.Quantity</span>
             </div>
             <div class="detail">
-                <span class="label">Location:</span>
+                <span class="label">Location</span>
                 <span class="value">@Item.StorageLocation</span>
             </div>
             @if (!string.IsNullOrEmpty(Item.Barcode))
             {
                 <div class="detail">
-                    <span class="label">Barcode:</span>
+                    <span class="label">Barcode</span>
                     <span class="value">@Item.Barcode</span>
                 </div>
             }
@@ -60,6 +62,17 @@
             <= 7 => "badge-danger",
             <= 30 => "badge-warning",
             _ => "badge-success"
+        };
+    }
+
+    private string GetExpiryIcon()
+    {
+        var daysUntilExpiry = (Item.ExpiryDate - DateTime.Now).Days;
+        return daysUntilExpiry switch
+        {
+            <= 7 => "fa-exclamation-circle",
+            <= 30 => "fa-clock",
+            _ => "fa-check-circle"
         };
     }
 }
