@@ -8,11 +8,16 @@ public class FoodItemService : IFoodItemService
 {
     private readonly IFoodItemRepository _repository;
     private readonly IOpenFoodFactsService _openFoodFactsService;
+    private readonly IProductCacheRepository _productCacheRepository;
 
-    public FoodItemService(IFoodItemRepository repository, IOpenFoodFactsService openFoodFactsService)
+    public FoodItemService(
+        IFoodItemRepository repository, 
+        IOpenFoodFactsService openFoodFactsService,
+        IProductCacheRepository productCacheRepository)
     {
         _repository = repository;
         _openFoodFactsService = openFoodFactsService;
+        _productCacheRepository = productCacheRepository;
     }
 
     public async Task<Result<FoodItem>> GetByIdAsync(int id)
@@ -121,8 +126,8 @@ public class FoodItemService : IFoodItemService
 
     private Result<bool> ValidateFoodItem(FoodItem item)
     {
-        if (string.IsNullOrWhiteSpace(item.Name))
-            return Result<bool>.Failure("Name is required.");
+        if (string.IsNullOrWhiteSpace(item.Barcode))
+            return Result<bool>.Failure("Barcode is required.");
 
         if (item.ExpiryDate < DateTime.Now)
             return Result<bool>.Failure("Expiry date cannot be in the past.");
@@ -139,9 +144,7 @@ public class FoodItemService : IFoodItemService
     public async Task<Result<bool>> CheckBarcodeExistsAsync(string barcode)
     {
         if (string.IsNullOrWhiteSpace(barcode))
-        {
             return Result<bool>.Failure("Barcode cannot be empty");
-        }
 
         var foodItem = await _repository.GetByBarcodeAsync(barcode);
         return Result<bool>.Success(foodItem.IsSuccess);
@@ -149,27 +152,48 @@ public class FoodItemService : IFoodItemService
 
     public async Task<Result<FoodItem>> CreateFromOpenFoodFactsAsync(string barcode, int quantity, string storageLocation)
     {
-        var productResult = await _openFoodFactsService.GetProductByBarcodeAsync(barcode);
-        if (!productResult.IsSuccess)
+        var productCacheResult = await _productCacheRepository.GetByBarcodeAsync(barcode);
+        ProductCache productCache;
+
+        if (!productCacheResult.IsSuccess)
         {
-            return Result<FoodItem>.Failure(productResult.Error);
+            var productResult = await _openFoodFactsService.GetProductByBarcodeAsync(barcode);
+            if (!productResult.IsSuccess)
+                return Result<FoodItem>.Failure(productResult.Error);
+
+            var product = productResult.Value;
+            productCache = new ProductCache
+            {
+                Barcode = barcode,
+                Name = product.Name,
+                Brand = product.Brand,
+                Category = product.Category,
+                ImageUrl = product.ImageUrl,
+                EnergyKcal = product.EnergyKcal,
+                Proteins = product.Proteins,
+                Carbohydrates = product.Carbohydrates,
+                Fat = product.Fat,
+                CreatedAt = DateTime.UtcNow,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            var addResult = await _productCacheRepository.AddAsync(productCache);
+            if (!addResult.IsSuccess)
+                return Result<FoodItem>.Failure(addResult.Error);
+        }
+        else
+        {
+            productCache = productCacheResult.Value;
         }
 
-        var product = productResult.Value;
         var foodItem = new FoodItem
         {
-            Name = product.Name,
             Barcode = barcode,
+            ProductId = productCache.Id,
             Quantity = quantity,
             StorageLocation = storageLocation,
-            ExpiryDate = DateTime.Now.AddMonths(1), // Default expiry date
-            NutritionalInfo = new NutritionalInfo
-            {
-                EnergyKcal = product.EnergyKcal ?? 0,
-                Proteins = product.Proteins ?? 0,
-                Carbohydrates = product.Carbohydrates ?? 0,
-                Fat = product.Fat ?? 0
-            }
+            ExpiryDate = DateTime.Now.AddMonths(1),
+            Product = productCache
         };
 
         var result = await _repository.AddAsync(foodItem);
@@ -191,7 +215,12 @@ public class FoodItemService : IFoodItemService
                 : Result<FoodItem>.Failure(updateResult.Error);
         }
 
-        return await CreateFromOpenFoodFactsAsync(barcode, quantity, storageLocation);
+        var newItem = await CreateFromOpenFoodFactsAsync(barcode, quantity, storageLocation);
+        if (newItem.IsSuccess)
+        {
+            newItem.Value.ExpiryDate = expiryDate;
+            await _repository.UpdateAsync(newItem.Value);
+        }
+        return newItem;
     }
-
 }

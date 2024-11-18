@@ -134,7 +134,7 @@
         var existingItem = await FoodItemService.GetByBarcodeAsync(item.Barcode);
         if (existingItem.IsSuccess)
         {
-            item.Name = existingItem.Value.Name;
+            item.Name = existingItem.Value.Product.Name;
             item.ExistingItem = true;
         }
         else

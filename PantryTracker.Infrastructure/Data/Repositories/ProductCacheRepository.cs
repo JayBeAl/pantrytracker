@@ -16,9 +16,19 @@ public class ProductCacheRepository : IProductCacheRepository
 
     public async Task<Result<ProductCache>> GetByBarcodeAsync(string barcode)
     {
-        var product = await _context.ProductCache.FindAsync(barcode);
+        var product = await _context.ProductCache
+            .FirstOrDefaultAsync(p => p.Barcode == barcode);
+            
         return product == null 
             ? Result<ProductCache>.Failure($"Product with barcode {barcode} not found in cache") 
+            : Result<ProductCache>.Success(product);
+    }
+
+    public async Task<Result<ProductCache>> GetByIdAsync(int id)
+    {
+        var product = await _context.ProductCache.FindAsync(id);
+        return product == null 
+            ? Result<ProductCache>.Failure($"Product with id {id} not found in cache") 
             : Result<ProductCache>.Success(product);
     }
 

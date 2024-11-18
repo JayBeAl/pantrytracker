@@ -41,41 +41,20 @@
                 </div>
             </div>
 
-            @if (_productFound)
+            @if (_productFound && _foodItem.Product != null)
             {
                 <div class="product-preview">
-                    @if (!string.IsNullOrEmpty(_foodItem.ImageUrl))
+                    @if (!string.IsNullOrEmpty(_foodItem.Product.ImageUrl))
                     {
-                        <img src="@_foodItem.ImageUrl" alt="@_foodItem.Name" class="product-image" />
+                        <img src="@_foodItem.Product.ImageUrl" alt="@_foodItem.Product.Name" class="product-image" />
                     }
                     <div class="product-info">
-                        <div class="brand">@_foodItem.Brand</div>
-                        <h4>@_foodItem.Name</h4>
-                        <div class="category">@_foodItem.Category</div>
+                        <div class="brand">@_foodItem.Product.Brand</div>
+                        <h4>@_foodItem.Product.Name</h4>
+                        <div class="category">@_foodItem.Product.Category</div>
                     </div>
                 </div>
             }
-
-            <div class="form-group">
-                <label for="name">Name</label>
-                <InputText id="name" @bind-Value="_foodItem.Name" class="form-control" />
-                <ValidationMessage For="@(() => _foodItem.Name)" />
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="brand">Brand</label>
-                    <InputText id="brand" @bind-Value="_foodItem.Brand" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label for="category">Category</label>
-                    <InputText id="category" @bind-Value="_foodItem.Category" class="form-control" />
-                </div>
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h3 class="section-title">Storage Details</h3>
 
             <div class="form-row">
                 <div class="form-group">
@@ -132,7 +111,7 @@
             if (result.IsSuccess)
             {
                 _foodItem = result.Value;
-                _productFound = !string.IsNullOrEmpty(_foodItem.Brand);
+                _productFound = true;
             }
             else
             {
@@ -156,11 +135,6 @@
         var result = await OpenFoodFactsService.GetProductByBarcodeAsync(_foodItem.Barcode);
         if (result.IsSuccess)
         {
-            var product = result.Value;
-            _foodItem.Name = product.Name;
-            _foodItem.Brand = product.Brand;
-            _foodItem.Category = product.Category;
-            _foodItem.ImageUrl = product.ImageUrl;
             _productFound = true;
         }
         else

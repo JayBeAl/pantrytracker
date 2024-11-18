@@ -10,6 +10,20 @@ public class PantryContext : DbContext
     }
 
     public DbSet<FoodItem> FoodItems { get; set; }
-    public DbSet<NutritionalInfo> NutritionalInfo { get; set; }
     public DbSet<ProductCache> ProductCache { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<ProductCache>()
+            .HasIndex(p => p.Barcode)
+            .IsUnique();
+
+        modelBuilder.Entity<FoodItem>()
+            .HasOne(f => f.Product)
+            .WithMany()
+            .HasForeignKey(f => f.ProductId)
+            .IsRequired();
+    }
 }

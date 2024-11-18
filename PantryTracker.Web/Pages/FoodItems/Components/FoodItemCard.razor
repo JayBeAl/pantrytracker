@@ -4,18 +4,18 @@
 <div class="food-item-card">
     <div class="card-header">
         <div class="product-info">
-            @if (!string.IsNullOrEmpty(Item.ImageUrl))
+            @if (!string.IsNullOrEmpty(Item.Product.ImageUrl))
             {
-                <img src="@Item.ImageUrl" alt="@Item.Name" class="product-image" loading="lazy" />
+                <img src="@Item.Product.ImageUrl" alt="@Item.Product.Name" class="product-image" loading="lazy" />
             }
             <div class="product-details">
                 <div class="name-row">
                     <div class="title-section">
-                        @if (!string.IsNullOrEmpty(Item.Brand))
+                        @if (!string.IsNullOrEmpty(Item.Product.Brand))
                         {
-                            <div class="brand">@Item.Brand</div>
+                            <div class="brand">@Item.Product.Brand</div>
                         }
-                        <h4 class="item-name">@Item.Name</h4>
+                        <h4 class="item-name">@Item.Product.Name</h4>
                     </div>
                     <div class="header-actions">
                         <button class="btn-icon" @onclick="() => OnEdit.InvokeAsync(Item.Id)" title="Edit">
@@ -27,9 +27,9 @@
                     </div>
                 </div>
                 <div class="meta-info">
-                    @if (!string.IsNullOrEmpty(Item.Category))
+                    @if (!string.IsNullOrEmpty(Item.Product.Category))
                     {
-                        <span class="category">@Item.Category</span>
+                        <span class="category">@Item.Product.Category</span>
                     }
                     <span class="expiry-badge @GetExpiryBadgeClass()">
                         <i class="fas @GetExpiryIcon()"></i>
@@ -52,23 +52,23 @@
             </div>
         </div>
 
-        @if (Item.NutritionalInfo != null)
+        @if (Item.Product is { EnergyKcal: not null })
         {
             <div class="nutritional-info">
                 <div class="nutrient">
-                    <span class="nutrient-value">@Item.NutritionalInfo.EnergyKcal</span>
+                    <span class="nutrient-value">@Item.Product.EnergyKcal</span>
                     <span class="nutrient-label">kcal</span>
                 </div>
                 <div class="nutrient">
-                    <span class="nutrient-value">@Item.NutritionalInfo.Proteins</span>
+                    <span class="nutrient-value">@Item.Product.Proteins</span>
                     <span class="nutrient-label">protein</span>
                 </div>
                 <div class="nutrient">
-                    <span class="nutrient-value">@Item.NutritionalInfo.Carbohydrates</span>
+                    <span class="nutrient-value">@Item.Product.Carbohydrates</span>
                     <span class="nutrient-label">carbs</span>
                 </div>
                 <div class="nutrient">
-                    <span class="nutrient-value">@Item.NutritionalInfo.Fat</span>
+                    <span class="nutrient-value">@Item.Product.Fat</span>
                     <span class="nutrient-label">fat</span>
                 </div>
             </div>
@@ -77,7 +77,7 @@
 </div>
 
 @code {
-    [Parameter] public FoodItem Item { get; set; }
+    [Parameter] public FoodItem Item { get; set; } = null!;
     [Parameter] public EventCallback<int> OnDelete { get; set; }
     [Parameter] public EventCallback<int> OnEdit { get; set; }
 

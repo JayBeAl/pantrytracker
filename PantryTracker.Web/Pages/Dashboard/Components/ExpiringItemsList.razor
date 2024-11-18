@@ -5,7 +5,7 @@
         @foreach (var item in Items)
         {
             <div class="expiring-item">
-                <span class="item-name">@item.Name</span>
+                <span class="item-name">@item.Product.Name</span>
                 <span class="expiry-date">@item.ExpiryDate.ToShortDateString()</span>
             </div>
         }
@@ -13,5 +13,5 @@
 </div>
 
 @code {
-    [Parameter] public IEnumerable<FoodItem> Items { get; set; }
+    [Parameter] public IEnumerable<FoodItem> Items { get; set; } = null!;
 }

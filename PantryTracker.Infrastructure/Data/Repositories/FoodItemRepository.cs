@@ -17,7 +17,7 @@ public class FoodItemRepository : IFoodItemRepository
     public async Task<Result<FoodItem>> GetByIdAsync(int id)
     {
         var item = await _context.FoodItems
-            .Include(f => f.NutritionalInfo)
+            .Include(f => f.Product)
             .FirstOrDefaultAsync(f => f.Id == id);
 
         return item == null 
@@ -28,7 +28,7 @@ public class FoodItemRepository : IFoodItemRepository
     public async Task<Result<FoodItem>> GetByBarcodeAsync(string barcode)
     {
         var item = await _context.FoodItems
-            .Include(f => f.NutritionalInfo)
+            .Include(f => f.Product)
             .FirstOrDefaultAsync(f => f.Barcode == barcode);
 
         return item == null 
@@ -39,8 +39,8 @@ public class FoodItemRepository : IFoodItemRepository
     public async Task<Result<IEnumerable<FoodItem>>> GetAllAsync()
     {
         var items = await _context.FoodItems
-            .Include(f => f.NutritionalInfo)
-            .OrderBy(f => f.Name)
+            .Include(f => f.Product)
+            .OrderBy(f => f.Product.Name)
             .ToListAsync();
 
         return Result<IEnumerable<FoodItem>>.Success(items);
@@ -50,7 +50,7 @@ public class FoodItemRepository : IFoodItemRepository
     {
         var thresholdDate = DateTime.Now.AddDays(daysThreshold);
         var items = await _context.FoodItems
-            .Include(f => f.NutritionalInfo)
+            .Include(f => f.Product)
             .Where(f => f.ExpiryDate <= thresholdDate)
             .OrderBy(f => f.ExpiryDate)
             .ToListAsync();
@@ -61,9 +61,9 @@ public class FoodItemRepository : IFoodItemRepository
     public async Task<Result<IEnumerable<FoodItem>>> GetByStorageLocationAsync(string location)
     {
         var items = await _context.FoodItems
-            .Include(f => f.NutritionalInfo)
+            .Include(f => f.Product)
             .Where(f => f.StorageLocation == location)
-            .OrderBy(f => f.Name)
+            .OrderBy(f => f.Product.Name)
             .ToListAsync();
 
         return Result<IEnumerable<FoodItem>>.Success(items);
@@ -72,9 +72,9 @@ public class FoodItemRepository : IFoodItemRepository
     public async Task<Result<IEnumerable<FoodItem>>> GetByCategoryAsync(string category)
     {
         var items = await _context.FoodItems
-            .Include(f => f.NutritionalInfo)
-            .Where(f => f.Category == category)
-            .OrderBy(f => f.Name)
+            .Include(f => f.Product)
+            .Where(f => f.Product.Category == category)
+            .OrderBy(f => f.Product.Name)
             .ToListAsync();
 
         return Result<IEnumerable<FoodItem>>.Success(items);
@@ -83,7 +83,8 @@ public class FoodItemRepository : IFoodItemRepository
     public async Task<Result<IEnumerable<string>>> GetAllCategoriesAsync()
     {
         var categories = await _context.FoodItems
-            .Select(f => f.Category)
+            .Include(f => f.Product)
+            .Select(f => f.Product.Category)
             .Distinct()
             .Where(c => !string.IsNullOrEmpty(c))
             .OrderBy(c => c)
@@ -123,23 +124,13 @@ public class FoodItemRepository : IFoodItemRepository
         try
         {
             var existingItem = await _context.FoodItems
-                .Include(f => f.NutritionalInfo)
+                .Include(f => f.Product)
                 .FirstOrDefaultAsync(f => f.Id == foodItem.Id);
 
             if (existingItem == null)
                 return Result<bool>.Failure($"FoodItem with ID {foodItem.Id} not found.");
 
             _context.Entry(existingItem).CurrentValues.SetValues(foodItem);
-            
-            if (foodItem.NutritionalInfo != null)
-            {
-                if (existingItem.NutritionalInfo == null)
-                {
-                    existingItem.NutritionalInfo = new NutritionalInfo();
-                }
-                _context.Entry(existingItem.NutritionalInfo).CurrentValues.SetValues(foodItem.NutritionalInfo);
-            }
-
             await _context.SaveChangesAsync();
             return Result<bool>.Success(true);
         }
@@ -154,7 +145,7 @@ public class FoodItemRepository : IFoodItemRepository
         try
         {
             var foodItem = await _context.FoodItems
-                .Include(f => f.NutritionalInfo)
+                .Include(f => f.Product)
                 .FirstOrDefaultAsync(f => f.Id == id);
 
             if (foodItem == null)
