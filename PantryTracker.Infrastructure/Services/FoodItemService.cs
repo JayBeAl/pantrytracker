@@ -163,8 +163,8 @@ public class FoodItemService : IFoodItemService
 
     private Result<bool> ValidateFoodItem(FoodItem item)
     {
-        if (string.IsNullOrWhiteSpace(item.Barcode))
-            return Result<bool>.Failure("Barcode is required.");
+        if (item.ProductId == 0)
+            return Result<bool>.Failure("Product selection is required.");
 
         if (item.ExpiryDate < DateTime.Now)
             return Result<bool>.Failure("Expiry date cannot be in the past.");

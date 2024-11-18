@@ -4,7 +4,7 @@
 @using PantryTracker.Core.Models
 @using PantryTracker.Web.Shared.Components
 @inject IFoodItemService FoodItemService
-@inject IOpenFoodFactsService OpenFoodFactsService
+@inject IProductCacheRepository ProductCacheRepository
 @inject NavigationManager NavigationManager
 
 <div class="food-item-form">
@@ -24,54 +24,94 @@
 
     <EditForm Model="@_foodItem" OnValidSubmit="HandleSubmit">
         <DataAnnotationsValidator />
-
+        <ValidationSummary />
         <div class="form-section">
             <h3 class="section-title">Product Information</h3>
 
             <div class="form-group">
-                <label for="barcode">Barcode</label>
-                <div class="barcode-input">
-                    <InputText id="barcode" @bind-Value="_foodItem.Barcode" class="form-control" />
-                    <button type="button" class="btn btn-secondary" @onclick="ScanBarcode">
-                        <i class="fas fa-barcode"></i>
-                    </button>
-                    <button type="button" class="btn btn-primary" @onclick="LookupProduct">
-                        <i class="fas fa-search"></i>
+                <label>Select Product</label>
+                <div class="product-selection">
+                    <select class="form-control" @bind="_selectedProductId">
+                        <option value="">-- Select existing product --</option>
+                        @foreach (var product in _cachedProducts)
+                        {
+                            <option value="@product.Id">@product.Brand @product.Name</option>
+                        }
+                    </select>
+                    <button type="button" class="btn btn-secondary" @onclick="ToggleNewProductForm">
+                        @if (_showNewProductForm)
+                        {
+                            <span><i class="fas fa-times"></i> Cancel</span>
+                        }
+                        else
+                        {
+                            <span><i class="fas fa-plus"></i> New Product</span>
+                        }
                     </button>
                 </div>
             </div>
 
-            @if (_productFound && _foodItem.Product != null)
+            @if (_showNewProductForm)
             {
-                <div class="product-preview">
-                    @if (!string.IsNullOrEmpty(_foodItem.Product.ImageUrl))
-                    {
-                        <img src="@_foodItem.Product.ImageUrl" alt="@_foodItem.Product.Name" class="product-image" />
-                    }
-                    <div class="product-info">
-                        <div class="brand">@_foodItem.Product.Brand</div>
-                        <h4>@_foodItem.Product.Name</h4>
-                        <div class="category">@_foodItem.Product.Category</div>
+                <div class="new-product-form">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <InputText @bind-Value="_newProduct.Name" class="form-control" />
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Brand</label>
+                            <InputText @bind-Value="_newProduct.Brand" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <InputText @bind-Value="_newProduct.Category" class="form-control" placeholder="e.g. Dairy, Snacks" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Energy (kcal)</label>
+                            <InputNumber @bind-Value="_newProduct.EnergyKcal" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Protein (g)</label>
+                            <InputNumber @bind-Value="_newProduct.Proteins" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Carbs (g)</label>
+                            <InputNumber @bind-Value="_newProduct.Carbohydrates" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Fat (g)</label>
+                            <InputNumber @bind-Value="_newProduct.Fat" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Image URL</label>
+                        <InputText @bind-Value="_newProduct.ImageUrl" class="form-control" />
+                    </div>
+                    <button type="button" class="btn btn-primary" @onclick="CreateNewProduct">
+                        Save Product
+                    </button>
                 </div>
             }
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="quantity">Quantity</label>
-                    <InputNumber id="quantity" @bind-Value="_foodItem.Quantity" class="form-control" />
+                    <label>Quantity</label>
+                    <InputNumber @bind-Value="_foodItem.Quantity" class="form-control" />
                     <ValidationMessage For="@(() => _foodItem.Quantity)" />
                 </div>
                 <div class="form-group">
-                    <label for="location">Storage Location</label>
-                    <InputText id="location" @bind-Value="_foodItem.StorageLocation" class="form-control" />
+                    <label>Storage Location</label>
+                    <InputText @bind-Value="_foodItem.StorageLocation" class="form-control" />
                     <ValidationMessage For="@(() => _foodItem.StorageLocation)" />
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="expiryDate">Expiry Date</label>
-                <InputDate id="expiryDate" @bind-Value="_foodItem.ExpiryDate" class="form-control" />
+                <label>Expiry Date</label>
+                <InputDate @bind-Value="_foodItem.ExpiryDate" class="form-control" />
                 <ValidationMessage For="@(() => _foodItem.ExpiryDate)" />
             </div>
         </div>
@@ -95,102 +135,124 @@
 
 @code {
     [Parameter] public int? Id { get; set; }
-    private FoodItem _foodItem = new();
+    private FoodItem _foodItem = new() { ExpiryDate = DateTime.Now.AddDays(7) };
+    private ProductCache _newProduct = new();
+    private List<ProductCache> _cachedProducts = new();
+    private bool _showNewProductForm;
+    private string? _selectedProductId;
     private bool _isNew => Id == null;
     private string _errorMessage;
     private string _successMessage;
     private bool _isProcessing;
-    private bool _productFound;
 
     protected override async Task OnInitializedAsync()
     {
+        var result = await ProductCacheRepository.GetAllAsync();
+        if (result.IsSuccess)
+        {
+            _cachedProducts = result.Value.OrderBy(p => p.Brand).ThenBy(p => p.Name).ToList();
+        }
+
         if (!_isNew)
         {
-            _isProcessing = true;
-            var result = await FoodItemService.GetByIdAsync(Id.Value);
-            if (result.IsSuccess)
+            var itemResult = await FoodItemService.GetByIdAsync(Id.Value);
+            if (itemResult.IsSuccess)
             {
-                _foodItem = result.Value;
-                _productFound = true;
+                _foodItem = itemResult.Value;
+                _selectedProductId = _foodItem.ProductId.ToString();
             }
-            else
-            {
-                _errorMessage = result.Error;
-            }
-            _isProcessing = false;
         }
     }
 
-    private async Task LookupProduct()
+    private void ToggleNewProductForm()
     {
-        if (string.IsNullOrWhiteSpace(_foodItem.Barcode))
+        _showNewProductForm = !_showNewProductForm;
+        if (_showNewProductForm)
         {
-            _errorMessage = "Please enter a barcode first";
+            _selectedProductId = null;
+        }
+    }
+
+    private async Task CreateNewProduct()
+    {
+        if (string.IsNullOrWhiteSpace(_newProduct.Name))
+        {
+            _errorMessage = "Product name is required";
             return;
         }
 
         _isProcessing = true;
-        _errorMessage = null;
+        _newProduct.CreatedAt = DateTime.UtcNow;
+        _newProduct.LastUpdated = DateTime.UtcNow;
 
-        var result = await OpenFoodFactsService.GetProductByBarcodeAsync(_foodItem.Barcode);
+        var result = await ProductCacheRepository.AddAsync(_newProduct);
         if (result.IsSuccess)
         {
-            _productFound = true;
+            _cachedProducts.Add(_newProduct);
+            _selectedProductId = _newProduct.Id.ToString();
+            _showNewProductForm = false;
+            _newProduct = new();
+            _successMessage = "Product created successfully";
         }
         else
         {
             _errorMessage = result.Error;
-            _productFound = false;
         }
-
         _isProcessing = false;
     }
 
     private async Task HandleSubmit()
     {
+        if (string.IsNullOrEmpty(_selectedProductId))
+        {
+            _errorMessage = "Please select a product";
+            return;
+        }
+
         _isProcessing = true;
         _errorMessage = null;
         _successMessage = null;
 
+        var selectedProduct = _cachedProducts.FirstOrDefault(p => p.Id == int.Parse(_selectedProductId));
+        if (selectedProduct != null)
+        {
+            _foodItem.ProductId = selectedProduct.Id;
+            _foodItem.Product = selectedProduct;
+        }
+
         if (_isNew)
         {
-            var addResult = await FoodItemService.AddFoodItemAsync(_foodItem);
-            if (addResult.IsSuccess)
+            var result = await FoodItemService.AddFoodItemAsync(_foodItem);
+            if (result.IsSuccess)
             {
-                _successMessage = "Item added successfully!";
+                _successMessage = "Item added successfully";
                 await Task.Delay(1000);
                 NavigationManager.NavigateTo("/fooditems");
             }
             else
             {
-                _errorMessage = addResult.Error;
+                _errorMessage = result.Error;
             }
         }
         else
         {
-            var updateResult = await FoodItemService.UpdateFoodItemAsync(_foodItem);
-            if (updateResult.IsSuccess)
+            var result = await FoodItemService.UpdateFoodItemAsync(_foodItem);
+            if (result.IsSuccess)
             {
-                _successMessage = "Item updated successfully!";
+                _successMessage = "Item updated successfully";
                 await Task.Delay(1000);
                 NavigationManager.NavigateTo("/fooditems");
             }
             else
             {
-                _errorMessage = updateResult.Error;
+                _errorMessage = result.Error;
             }
         }
-
         _isProcessing = false;
     }
 
     private void Cancel()
     {
         NavigationManager.NavigateTo("/fooditems");
-    }
-
-    private async Task ScanBarcode()
-    {
-        // Barcode scanning functionality will be implemented later
     }
 }
