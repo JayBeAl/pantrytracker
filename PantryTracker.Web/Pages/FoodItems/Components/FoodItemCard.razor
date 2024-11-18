@@ -4,10 +4,18 @@
 <div class="food-item-card">
     <div class="card-header">
         <div class="product-info">
-            @if (!string.IsNullOrEmpty(Item.Product.ImageUrl))
-            {
-                <img src="@Item.Product.ImageUrl" alt="@Item.Product.Name" class="product-image" loading="lazy" />
-            }
+            <div class="image-container">
+                @if (!string.IsNullOrEmpty(Item.Product.ImageUrl))
+                {
+                    <img src="@Item.Product.ImageUrl" alt="@Item.Product.Name" class="product-image" loading="lazy" />
+                }
+                else
+                {
+                    <div class="placeholder-image">
+                        <i class="fas fa-box"></i>
+                    </div>
+                }
+            </div>
             <div class="product-details">
                 <div class="name-row">
                     <div class="title-section">
@@ -27,10 +35,12 @@
                     </div>
                 </div>
                 <div class="meta-info">
-                    @if (!string.IsNullOrEmpty(Item.Product.Category))
-                    {
-                        <span class="category">@Item.Product.Category</span>
-                    }
+                    <div class="tags">
+                        @foreach (var tag in GetTags())
+                        {
+                            <span class="tag">@tag</span>
+                        }
+                    </div>
                     <span class="expiry-badge @GetExpiryBadgeClass()">
                         <i class="fas @GetExpiryIcon()"></i>
                         <span>@Item.ExpiryDate.ToShortDateString()</span>
@@ -41,38 +51,35 @@
     </div>
 
     <div class="card-body">
-        <div class="quick-info">
+        <div class="inventory-info">
             <div class="info-item">
-                <span class="label">Qty</span>
+                <i class="fas fa-boxes"></i>
                 <span class="value">@Item.Quantity</span>
             </div>
             <div class="info-item">
-                <span class="label">Location</span>
+                <i class="fas fa-map-marker-alt"></i>
                 <span class="value">@Item.StorageLocation</span>
             </div>
         </div>
 
-        @if (Item.Product is { EnergyKcal: not null })
-        {
-            <div class="nutritional-info">
-                <div class="nutrient">
-                    <span class="nutrient-value">@Item.Product.EnergyKcal</span>
-                    <span class="nutrient-label">kcal</span>
-                </div>
-                <div class="nutrient">
-                    <span class="nutrient-value">@Item.Product.Proteins</span>
-                    <span class="nutrient-label">protein</span>
-                </div>
-                <div class="nutrient">
-                    <span class="nutrient-value">@Item.Product.Carbohydrates</span>
-                    <span class="nutrient-label">carbs</span>
-                </div>
-                <div class="nutrient">
-                    <span class="nutrient-value">@Item.Product.Fat</span>
-                    <span class="nutrient-label">fat</span>
-                </div>
+        <div class="nutritional-info">
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Item.Product.EnergyKcal)</span>
+                <span class="nutrient-label">kcal</span>
             </div>
-        }
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Item.Product.Proteins)</span>
+                <span class="nutrient-label">protein</span>
+            </div>
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Item.Product.Carbohydrates)</span>
+                <span class="nutrient-label">carbs</span>
+            </div>
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Item.Product.Fat)</span>
+                <span class="nutrient-label">fat</span>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -80,6 +87,22 @@
     [Parameter] public FoodItem Item { get; set; } = null!;
     [Parameter] public EventCallback<int> OnDelete { get; set; }
     [Parameter] public EventCallback<int> OnEdit { get; set; }
+
+    private string FormatDecimal(decimal? value)
+    {
+        if (value == null) return "-";
+        return Math.Round(value.Value, 1).ToString("0.#");
+    }
+
+    private List<string> GetTags()
+    {
+        var tags = new List<string>();
+        if (!string.IsNullOrEmpty(Item.Product.Category))
+        {
+            tags.AddRange(Item.Product.Category.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        }
+        return tags;
+    }
 
     private async Task HandleDelete()
     {
