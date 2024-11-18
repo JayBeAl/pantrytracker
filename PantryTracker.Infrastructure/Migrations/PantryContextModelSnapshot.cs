@@ -25,31 +25,13 @@ namespace PantryTracker.Infrastructure.Migrations
 
                     b.Property<string>("Barcode")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Brand")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
@@ -61,41 +43,20 @@ namespace PantryTracker.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProductId");
+
                     b.ToTable("FoodItems");
                 });
 
-            modelBuilder.Entity("PantryTracker.Core.Models.NutritionalInfo", b =>
+            modelBuilder.Entity("PantryTracker.Core.Models.ProductCache", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal?>("Carbohydrates")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("EnergyKcal")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("Fat")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("FoodItemId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal?>("Proteins")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FoodItemId")
-                        .IsUnique();
-
-                    b.ToTable("NutritionalInfo");
-                });
-
-            modelBuilder.Entity("PantryTracker.Core.Models.ProductCache", b =>
-                {
                     b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Brand")
@@ -135,25 +96,23 @@ namespace PantryTracker.Infrastructure.Migrations
                     b.Property<string>("ServingSize")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Barcode");
+                    b.HasKey("Id");
+
+                    b.HasIndex("Barcode")
+                        .IsUnique();
 
                     b.ToTable("ProductCache");
                 });
 
-            modelBuilder.Entity("PantryTracker.Core.Models.NutritionalInfo", b =>
+            modelBuilder.Entity("PantryTracker.Core.Models.FoodItem", b =>
                 {
-                    b.HasOne("PantryTracker.Core.Models.FoodItem", "FoodItem")
-                        .WithOne("NutritionalInfo")
-                        .HasForeignKey("PantryTracker.Core.Models.NutritionalInfo", "FoodItemId")
+                    b.HasOne("PantryTracker.Core.Models.ProductCache", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("FoodItem");
-                });
-
-            modelBuilder.Entity("PantryTracker.Core.Models.FoodItem", b =>
-                {
-                    b.Navigation("NutritionalInfo");
+                    b.Navigation("Product");
                 });
 #pragma warning restore 612, 618
         }

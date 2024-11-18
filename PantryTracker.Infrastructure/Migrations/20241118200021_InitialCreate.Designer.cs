@@ -11,8 +11,8 @@ using PantryTracker.Infrastructure;
 namespace PantryTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(PantryContext))]
-    [Migration("20241117085231_AddEnergyToNutritionalInfo")]
-    partial class AddEnergyToNutritionalInfo
+    [Migration("20241118200021_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,54 +33,33 @@ namespace PantryTracker.Infrastructure.Migrations
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("StorageLocation")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProductId");
+
                     b.ToTable("FoodItems");
                 });
 
-            modelBuilder.Entity("PantryTracker.Core.Models.NutritionalInfo", b =>
+            modelBuilder.Entity("PantryTracker.Core.Models.ProductCache", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Carbohydrates")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Energy")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Fat")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FoodItemId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Proteins")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FoodItemId")
-                        .IsUnique();
-
-                    b.ToTable("NutritionalInfo");
-                });
-
-            modelBuilder.Entity("PantryTracker.Core.Models.ProductCache", b =>
-                {
                     b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Brand")
@@ -120,25 +99,23 @@ namespace PantryTracker.Infrastructure.Migrations
                     b.Property<string>("ServingSize")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Barcode");
+                    b.HasKey("Id");
+
+                    b.HasIndex("Barcode")
+                        .IsUnique();
 
                     b.ToTable("ProductCache");
                 });
 
-            modelBuilder.Entity("PantryTracker.Core.Models.NutritionalInfo", b =>
+            modelBuilder.Entity("PantryTracker.Core.Models.FoodItem", b =>
                 {
-                    b.HasOne("PantryTracker.Core.Models.FoodItem", "FoodItem")
-                        .WithOne("NutritionalInfo")
-                        .HasForeignKey("PantryTracker.Core.Models.NutritionalInfo", "FoodItemId")
+                    b.HasOne("PantryTracker.Core.Models.ProductCache", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("FoodItem");
-                });
-
-            modelBuilder.Entity("PantryTracker.Core.Models.FoodItem", b =>
-                {
-                    b.Navigation("NutritionalInfo");
+                    b.Navigation("Product");
                 });
 #pragma warning restore 612, 618
         }
