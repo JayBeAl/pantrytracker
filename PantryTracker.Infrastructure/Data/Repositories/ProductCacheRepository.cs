@@ -45,6 +45,12 @@ public class ProductCacheRepository : IProductCacheRepository
     {
         try
         {
+            if (string.IsNullOrEmpty(product.Barcode))
+            {
+                // Generate a unique barcode for manually added products
+                product.Barcode = $"MANUAL-{DateTime.UtcNow.Ticks}";
+            }
+
             await _context.ProductCache.AddAsync(product);
             await _context.SaveChangesAsync();
             return Result<bool>.Success(true);
