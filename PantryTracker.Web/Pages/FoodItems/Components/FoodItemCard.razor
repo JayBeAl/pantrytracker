@@ -99,7 +99,15 @@
         var tags = new List<string>();
         if (!string.IsNullOrEmpty(Item.Product.Category))
         {
-            tags.AddRange(Item.Product.Category.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            var allTags = Item.Product.Category.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var singleWordTags = allTags.Where(t => !t.Contains(' ')).ToList();
+        
+            var selectedTag = singleWordTags.OrderByDescending(t => t.Length).FirstOrDefault() ?? allTags.FirstOrDefault();
+        
+            if (selectedTag != null)
+            {
+                tags.Add(selectedTag);
+            }
         }
         return tags;
     }

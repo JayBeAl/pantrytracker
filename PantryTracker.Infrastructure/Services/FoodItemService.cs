@@ -76,11 +76,48 @@ public class FoodItemService : IFoodItemService
         if (item.Id != 0)
             return Result<FoodItem>.Failure("New item should not have an ID.");
 
+        // Check cache first
+        var cachedProduct = await _productCacheRepository.GetByBarcodeAsync(item.Barcode);
+    
+        if (!cachedProduct.IsSuccess)
+        {
+            // Product not in cache, fetch from OpenFoodFacts
+            var productResult = await _openFoodFactsService.GetProductByBarcodeAsync(item.Barcode);
+            if (!productResult.IsSuccess)
+                return Result<FoodItem>.Failure(productResult.Error);
+
+            var product = new ProductCache
+            {
+                Barcode = item.Barcode,
+                Name = productResult.Value.Name,
+                Brand = productResult.Value.Brand,
+                Category = productResult.Value.Category,
+                ImageUrl = productResult.Value.ImageUrl,
+                EnergyKcal = productResult.Value.EnergyKcal,
+                Proteins = productResult.Value.Proteins,
+                Carbohydrates = productResult.Value.Carbohydrates,
+                Fat = productResult.Value.Fat,
+                CreatedAt = DateTime.UtcNow,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            var addProductResult = await _productCacheRepository.AddAsync(product);
+            if (!addProductResult.IsSuccess)
+                return Result<FoodItem>.Failure(addProductResult.Error);
+            
+            item.ProductId = product.Id;
+        }
+        else
+        {
+            item.ProductId = cachedProduct.Value.Id;
+        }
+
         var addResult = await _repository.AddAsync(item);
         return addResult.IsSuccess 
             ? Result<FoodItem>.Success(item) 
             : Result<FoodItem>.Failure(addResult.Error);
     }
+
 
     public async Task<Result<bool>> UpdateFoodItemAsync(FoodItem item)
     {
