@@ -10,6 +10,7 @@ public interface IProductCacheRepository
     Task<Result<IEnumerable<ProductCache>>> GetAllAsync();
     Task<Result<bool>> AddAsync(ProductCache product);
     Task<Result<bool>> UpdateAsync(ProductCache product);
+    Task<Result<bool>> DeleteAsync(int id);
     Task<Result<bool>> ExistsAsync(string barcode);
     Task<Result<bool>> ExistsByIdAsync(int id);
 }

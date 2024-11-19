@@ -13,6 +13,9 @@
 @import 'components/scanning-session/scanning-session.css';
 @import 'components/item-details-dialog.css';
 @import 'components/scanning-session/session-summary.css';
+@import 'components/product-card.css';
+@import 'components/product-list.css';
+@import 'components/product-form.css';
 
 
 :root {

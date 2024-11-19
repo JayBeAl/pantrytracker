@@ -18,17 +18,17 @@ public class ProductCacheRepository : IProductCacheRepository
     {
         var product = await _context.ProductCache
             .FirstOrDefaultAsync(p => p.Barcode == barcode);
-    
-        return product == null 
-            ? Result<ProductCache>.Failure($"Product with barcode {barcode} not found in cache") 
+
+        return product == null
+            ? Result<ProductCache>.Failure($"Product with barcode {barcode} not found in cache")
             : Result<ProductCache>.Success(product);
     }
 
     public async Task<Result<ProductCache>> GetByIdAsync(int id)
     {
         var product = await _context.ProductCache.FindAsync(id);
-        return product == null 
-            ? Result<ProductCache>.Failure($"Product with ID {id} not found in cache") 
+        return product == null
+            ? Result<ProductCache>.Failure($"Product with ID {id} not found in cache")
             : Result<ProductCache>.Success(product);
     }
 
@@ -86,5 +86,25 @@ public class ProductCacheRepository : IProductCacheRepository
     {
         var exists = await _context.ProductCache.AnyAsync(p => p.Id == id);
         return Result<bool>.Success(exists);
+    }
+
+    public async Task<Result<bool>> DeleteAsync(int id)
+    {
+        try
+        {
+            var product = await _context.ProductCache.FindAsync(id);
+            if (product == null)
+            {
+                return Result<bool>.Failure($"Product with ID {id} not found");
+            }
+
+            _context.ProductCache.Remove(product);
+            await _context.SaveChangesAsync();
+            return Result<bool>.Success(true);
+        }
+        catch (Exception ex)
+        {
+            return Result<bool>.Failure($"Failed to delete product: {ex.Message}");
+        }
     }
 }

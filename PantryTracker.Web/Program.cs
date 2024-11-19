@@ -23,7 +23,8 @@ builder.Services.AddDbContext<PantryContext>(options =>
 builder.Services.AddScoped<IFoodItemRepository, FoodItemRepository>();
 builder.Services.AddScoped<IProductCacheRepository, ProductCacheRepository>();
 builder.Services.AddScoped<SessionStorage>();
-
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductCacheRepository, ProductCacheRepository>();
 
 
 // Services
@@ -34,11 +35,7 @@ builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(clie
     client.BaseAddress = new Uri("https://world.openfoodfacts.org/api/v2/");
 });
 builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    });
-
+    .AddJsonOptions(options => { options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; });
 
 
 var app = builder.Build();

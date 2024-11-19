@@ -1,0 +1,134 @@
+@page "/products"
+@using PantryTracker.Core.Interfaces
+@using PantryTracker.Core.Models
+@using PantryTracker.Web.Shared.Components
+@inject IProductService ProductService
+@inject NavigationManager NavigationManager
+
+<div class="product-list">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Products</h1>
+            <p class="text-muted">Manage your product catalog</p>
+        </div>
+        <button class="btn btn-primary" @onclick="CreateNewProduct">
+            <i class="fas fa-plus me-2"></i> Add Product
+        </button>
+    </div>
+
+    <div class="filters">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text"
+                   class="form-control"
+                   placeholder="Search products..."
+                   @bind-value="_searchTerm"
+                   @bind-value:event="oninput"/>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <Alert Message="@_errorMessage" Type="AlertType.Error"/>
+    }
+
+    @if (_isLoading)
+    {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading products...</p>
+        </div>
+    }
+    else if (!FilteredProducts.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-box-open"></i>
+            @if (string.IsNullOrEmpty(_searchTerm))
+            {
+                <h3>No products yet</h3>
+                <p>Start by adding your first product to the catalog.</p>
+                <button class="btn btn-primary" @onclick="CreateNewProduct">
+                    <i class="fas fa-plus me-2"></i> Add Product
+                </button>
+            }
+            else
+            {
+                <h3>No matching products</h3>
+                <p>Try adjusting your search terms.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="products-grid">
+            @foreach (var product in FilteredProducts)
+            {
+                <ProductCard
+                        Product="@product"
+                        OnDelete="DeleteProduct"
+                        OnEdit="EditProduct"/>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<ProductCache> _products = new();
+    private string _searchTerm = "";
+    private string _errorMessage = "";
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var result = await ProductService.GetAllAsync();
+            if (result.IsSuccess)
+            {
+                _products = result.Value.ToList();
+            }
+            else
+            {
+                _errorMessage = result.Error;
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private IEnumerable<ProductCache> FilteredProducts =>
+            _products.Where(p =>
+                            string.IsNullOrEmpty(_searchTerm) ||
+                            p.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                            p.Brand.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                            p.Category.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(p => p.Brand)
+                    .ThenBy(p => p.Name);
+
+    private void CreateNewProduct()
+    {
+        NavigationManager.NavigateTo("/products/new");
+    }
+
+    private void EditProduct(int id)
+    {
+        NavigationManager.NavigateTo($"/products/edit/{id}");
+    }
+
+    private async Task DeleteProduct(int id)
+    {
+        var result = await ProductService.DeleteProductAsync(id);
+        if (result.IsSuccess)
+        {
+            _products.RemoveAll(p => p.Id == id);
+            StateHasChanged();
+        }
+        else
+        {
+            _errorMessage = result.Error;
+        }
+    }
+
+}
