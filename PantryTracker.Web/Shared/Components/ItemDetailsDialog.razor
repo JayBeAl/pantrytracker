@@ -1,54 +1,100 @@
 @using PantryTracker.Web.Pages.ScanningSession.Models
-@if (Show)
-{
-    <div class="dialog-overlay">
-        <div class="dialog-content">
-            <div class="dialog-header">
-                <h3>Add Item Details</h3>
-                <button class="close-button" @onclick="OnCancel">
-                    <i class="fas fa-times"></i>
+<div class="dialog-overlay @(_show ? "show" : "")">
+    <div class="dialog-content">
+        <div class="quick-locations">
+            <button class="location-btn @(_details.StorageLocation == "Fridge" ? "active" : "")"
+                    @onclick='() => QuickSetLocation("Fridge")'>
+                <i class="fas fa-temperature-low"></i> Fridge
+            </button>
+            <button class="location-btn @(_details.StorageLocation == "Pantry" ? "active" : "")"
+                    @onclick='() => QuickSetLocation("Pantry")'>
+                <i class="fas fa-box"></i> Pantry
+            </button>
+            <button class="location-btn @(_details.StorageLocation == "Freezer" ? "active" : "")"
+                    @onclick='() => QuickSetLocation("Freezer")'>
+                <i class="fas fa-snowflake"></i> Freezer
+            </button>
+        </div>
+
+        <div class="quantity-section">
+            <label>Quantity</label>
+            <div class="quantity-controls">
+                <button class="ctrl-btn" @onclick="DecreaseQuantity">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <span class="quantity">@_details.Quantity</span>
+                <button class="ctrl-btn" @onclick="IncreaseQuantity">
+                    <i class="fas fa-plus"></i>
                 </button>
             </div>
+        </div>
 
-            <EditForm Model="@_details" OnValidSubmit="HandleSubmit">
-                <DataAnnotationsValidator />
+        <div class="expiry-section">
+            <div class="expiry-presets">
+                <button class="date-btn" @onclick="() => AddDays(1)">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>+1D</span>
+                </button>
+                <button class="date-btn" @onclick="() => AddMonths(1)">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>+1M</span>
+                </button>
+                <button class="date-btn" @onclick="() => AddYears(1)">
+                    <i class="fas fa-calendar"></i>
+                    <span>+1Y</span>
+                </button>
+            </div>
+            <div class="date-display">
+                <span class="date-label">Expires:</span>
+                <InputDate @bind-Value="_details.ExpiryDate" class="date-input"/>
+            </div>
+        </div>
 
-                <div class="form-group">
-                    <label for="quantity">Quantity</label>
-                    <InputNumber id="quantity" @bind-Value="_details.Quantity" class="form-control" />
-                    <ValidationMessage For="@(() => _details.Quantity)" />
-                </div>
 
-                <div class="form-group">
-                    <label for="location">Storage Location</label>
-                    <InputText id="location" @bind-Value="_details.StorageLocation" class="form-control" />
-                    <ValidationMessage For="@(() => _details.StorageLocation)" />
-                </div>
-
-                <div class="form-group">
-                    <label for="expiryDate">Expiry Date</label>
-                    <InputDate id="expiryDate" @bind-Value="_details.ExpiryDate" class="form-control" />
-                    <ValidationMessage For="@(() => _details.ExpiryDate)" />
-                </div>
-
-                <div class="dialog-actions">
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancel</button>
-                </div>
-            </EditForm>
+        <div class="dialog-actions">
+            <button class="btn btn-primary" @onclick="SaveAndContinue">
+                <i class="fas fa-check"></i>
+            </button>
+            <button class="btn btn-secondary" @onclick="Cancel">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
     </div>
-}
+</div>
 
 @code {
-    private ItemDetails _details = new();
-
     [Parameter] public bool Show { get; set; }
     [Parameter] public EventCallback<ItemDetails> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    private async Task HandleSubmit()
+    private ItemDetails _details = new() { StorageLocation = "Pantry" };
+    private bool _show => Show;
+
+    private void QuickSetLocation(string location) => _details.StorageLocation = location;
+    private void IncreaseQuantity() => _details.Quantity++;
+
+    private void DecreaseQuantity()
+    {
+        if (_details.Quantity > 1) _details.Quantity--;
+    }
+
+    private void QuickSetExpiry(int days) => _details.ExpiryDate = DateTime.Now.AddDays(days);
+
+    private async Task SaveAndContinue()
     {
         await OnSave.InvokeAsync(_details);
+        _details = new() { StorageLocation = "Pantry" };
     }
+
+    private async Task Cancel() => await OnCancel.InvokeAsync();
+
+    private void AddDay()
+    {
+        _details.ExpiryDate = _details.ExpiryDate.AddDays(1);
+    }
+
+    private void AddDays(int days) => _details.ExpiryDate = _details.ExpiryDate.AddDays(days);
+    private void AddMonths(int months) => _details.ExpiryDate = _details.ExpiryDate.AddMonths(months);
+    private void AddYears(int years) => _details.ExpiryDate = _details.ExpiryDate.AddYears(years);
+
 }
