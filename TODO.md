@@ -11,6 +11,7 @@
 - [ ] Batch operations for food items
 - [ ] Storage location management with capacity tracking
 - [ ] Inventory reports and statistics
+- [ ] Make locations a dropdown list
 
 ## Barcode Enhancements
 - [x] Add success sound when scanning
