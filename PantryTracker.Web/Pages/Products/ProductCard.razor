@@ -45,9 +45,19 @@
                             <span class="tag">@tag</span>
                         }
                     </div>
+                    @if (!string.IsNullOrEmpty(Product.ServingSize))
+                    {
+                        <span class="serving-size">
+                            <i class="fas fa-balance-scale"></i>
+                            @Product.ServingSize
+                        </span>
+                    }
                     @if (!string.IsNullOrEmpty(Product.Barcode))
                     {
-                        <span class="barcode">@Product.Barcode</span>
+                        <span class="barcode">
+                            <i class="fas fa-barcode"></i>
+                            @Product.Barcode
+                        </span>
                     }
                 </div>
             </div>
@@ -116,8 +126,6 @@
                 tags.Add(selectedTag);
             }
         }
-
         return tags;
     }
-
 }
