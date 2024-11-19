@@ -43,6 +43,7 @@
 - [ ] Offline support
 - [ ] Data backup/restore
 - [ ] Multi-user support
+- [ ] Resort file structure
 
 ## User Experience
 - [ ] Onboarding flow
