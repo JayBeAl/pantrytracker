@@ -37,8 +37,8 @@ def generate_context_paths():
                 continue
             rel_path = os.path.join(rel_root, file)
             if not spec.match_file(rel_path):
-                formatted_path = rel_path.replace(os.sep, '/')
-                context_path = f"@{formatted_path}"
+                # Just use the filename instead of the full path
+                context_path = f"@{file}"
                 context_paths.append(context_path)
         
         # Filter directories to avoid walking into ignored ones
