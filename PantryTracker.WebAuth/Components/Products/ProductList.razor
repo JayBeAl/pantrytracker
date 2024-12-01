@@ -1,7 +1,9 @@
 @page "/products"
+@using Microsoft.AspNetCore.Authorization
 @using PantryTracker.Core.Interfaces
 @using PantryTracker.Core.Models
 @using PantryTracker.WebAuth.Components.Shared
+@attribute [Authorize]
 @rendermode InteractiveServer
 @inject IProductService ProductService
 @inject NavigationManager NavigationManager

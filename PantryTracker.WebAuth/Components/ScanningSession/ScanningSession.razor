@@ -1,10 +1,12 @@
 @page "/scanning-session"
+@attribute [Authorize]
 @rendermode InteractiveServer
 @inject IFoodItemService FoodItemService
 @inject IOpenFoodFactsService OpenFoodFactsService
 @inject NavigationManager NavigationManager
 @inject SessionStorage SessionStorage
 @inject IJSRuntime JSRuntime
+@using Microsoft.AspNetCore.Authorization
 @using PantryTracker.Core.Interfaces
 @using PantryTracker.WebAuth.Components.ScanningSession.Enums
 @using PantryTracker.WebAuth.Components.ScanningSession.Models

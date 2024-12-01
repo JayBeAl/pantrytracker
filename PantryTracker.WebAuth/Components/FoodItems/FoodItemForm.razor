@@ -1,8 +1,10 @@
 @page "/fooditems/new"
 @page "/fooditems/edit/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
 @using PantryTracker.Core.Interfaces
 @using PantryTracker.Core.Models
 @using PantryTracker.WebAuth.Components.Shared
+@attribute [Authorize]
 @rendermode InteractiveServer
 @inject IFoodItemService FoodItemService
 @inject IProductCacheRepository ProductCacheRepository

@@ -367,4 +367,5 @@ fabric.properties
 # js
 bundle.js
 PantryTracker.Web/wwwroot/js/dist
-
+PantryTracker.WebAuth/wwwroot/js/dist
+PantryTracker.WebAuth/package-lock.json
