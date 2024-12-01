@@ -17,8 +17,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
 
 // Authentication and Identity
 builder.Services.AddCascadingAuthenticationState();
@@ -88,13 +86,10 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-app.MapBlazorHub();
 app.MapControllers();
 
 

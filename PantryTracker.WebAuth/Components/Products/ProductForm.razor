@@ -4,8 +4,11 @@
 @using PantryTracker.Core.Interfaces
 @using PantryTracker.Core.Models
 @using PantryTracker.WebAuth.Components.Shared
+@rendermode InteractiveServer
 @inject IProductService ProductService
 @inject NavigationManager NavigationManager
+
+<PageTitle>Products Add/Edit</PageTitle>
 
 <div class="product-form">
     <div class="page-header">

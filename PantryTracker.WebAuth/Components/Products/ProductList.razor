@@ -2,8 +2,11 @@
 @using PantryTracker.Core.Interfaces
 @using PantryTracker.Core.Models
 @using PantryTracker.WebAuth.Components.Shared
+@rendermode InteractiveServer
 @inject IProductService ProductService
 @inject NavigationManager NavigationManager
+
+<PageTitle>Products</PageTitle>
 
 <div class="product-list">
     <div class="page-header">

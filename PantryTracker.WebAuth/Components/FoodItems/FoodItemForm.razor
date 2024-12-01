@@ -3,9 +3,12 @@
 @using PantryTracker.Core.Interfaces
 @using PantryTracker.Core.Models
 @using PantryTracker.WebAuth.Components.Shared
+@rendermode InteractiveServer
 @inject IFoodItemService FoodItemService
 @inject IProductCacheRepository ProductCacheRepository
 @inject NavigationManager NavigationManager
+
+<PageTitle>Inventory Add/Edit</PageTitle>
 
 <div class="food-item-form">
     <div class="form-header">
