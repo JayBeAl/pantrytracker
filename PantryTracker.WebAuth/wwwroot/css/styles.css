@@ -1,0 +1,25 @@
+@import 'components/food-item-card.css';
+@import 'components/food-item-form.css';
+@import 'components/alert.css';
+@import 'components/dashboard/dashboard.css';
+@import 'components/dashboard/dashboard-stats.css';
+@import 'components/dashboard/expiring-items-list.css';
+@import 'components/dashboard/low-stock-list.css';
+@import 'components/dashboard/quick-actions.css';
+@import 'components/barcode-scanner.css';
+@import 'components/scanning-session/scanning-session.css';
+@import 'components/item-details-dialog.css';
+@import 'components/scanning-session/session-summary.css';
+@import 'components/product-card.css';
+@import 'components/product-list.css';
+@import 'components/product-form.css';
+
+
+:root {
+    --primary-color: #2563eb;
+    --primary-color-dark: #1d4ed8;
+    --secondary-color: #f3f4f6;
+    --secondary-color-hover: #e5e7eb;
+    --text-color: #1f2937;
+    --border-color: #d1d5db;
+}

@@ -28,12 +28,12 @@
         <ProjectReference Include="..\PantryTracker.Infrastructure\PantryTracker.Infrastructure.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <AdditionalFiles Include="Components\Dashboard\Components\DashboardStats.razor"/>
-        <AdditionalFiles Include="Components\Dashboard\Components\ExpiringItemsList.razor"/>
-        <AdditionalFiles Include="Components\Dashboard\Components\LowStockList.razor"/>
-        <AdditionalFiles Include="Components\Dashboard\Components\QuickActions.razor"/>
-        <AdditionalFiles Include="Components\Dashboard\Dashboard.razor"/>
-    </ItemGroup>
+    <Target Name="NpmInstall" BeforeTargets="Build">
+        <Exec Command="npm install"/>
+    </Target>
+
+    <Target Name="NpmBuild" BeforeTargets="Build" DependsOnTargets="NpmInstall">
+        <Exec Command="npm run build"/>
+    </Target>
 
 </Project>

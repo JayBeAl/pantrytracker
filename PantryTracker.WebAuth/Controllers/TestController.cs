@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PantryTracker.Core.Interfaces;
 
-namespace PantryTracker.Web.Controllers;
+namespace PantryTracker.WebAuth.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

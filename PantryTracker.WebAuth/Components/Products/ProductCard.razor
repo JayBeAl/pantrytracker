@@ -1,0 +1,133 @@
+@using PantryTracker.Core.Models
+@inject IJSRuntime JsRuntime
+
+<div class="product-card">
+    <div class="card-header">
+        <div class="product-info">
+            <div class="image-container">
+                @if (!string.IsNullOrEmpty(Product.ImageUrl))
+                {
+                    <img src="@Product.ImageUrl"
+                         alt="@Product.Name"
+                         class="product-image"
+                         loading="lazy"
+                         @onerror="ShowPlaceholder"/>
+                }
+                else
+                {
+                    <div class="placeholder-image">
+                        <i class="fas fa-box"></i>
+                    </div>
+                }
+            </div>
+            <div class="product-details">
+                <div class="name-row">
+                    <div class="title-section">
+                        @if (!string.IsNullOrEmpty(Product.Brand))
+                        {
+                            <div class="brand">@Product.Brand</div>
+                        }
+                        <h4 class="item-name">@Product.Name</h4>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-icon" @onclick="() => OnEdit.InvokeAsync(Product.Id)" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon" @onclick="HandleDelete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="meta-info">
+                    <div class="tags">
+                        @foreach (var tag in GetTags())
+                        {
+                            <span class="tag">@tag</span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(Product.ServingSize))
+                    {
+                        <span class="serving-size">
+                            <i class="fas fa-balance-scale"></i>
+                            @Product.ServingSize
+                        </span>
+                    }
+                    @if (!string.IsNullOrEmpty(Product.Barcode))
+                    {
+                        <span class="barcode">
+                            <i class="fas fa-barcode"></i>
+                            @Product.Barcode
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="nutritional-info">
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Product.EnergyKcal)</span>
+                <span class="nutrient-label">kcal</span>
+            </div>
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Product.Proteins)</span>
+                <span class="nutrient-label">protein</span>
+            </div>
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Product.Carbohydrates)</span>
+                <span class="nutrient-label">carbs</span>
+            </div>
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Product.Fat)</span>
+                <span class="nutrient-label">fat</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ProductCache Product { get; set; } = null!;
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    [Parameter] public EventCallback<int> OnEdit { get; set; }
+
+    private async Task HandleDelete()
+    {
+        if (await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this product?"))
+        {
+            await OnDelete.InvokeAsync(Product.Id);
+        }
+    }
+
+    private void ShowPlaceholder(ErrorEventArgs args)
+    {
+        Product.ImageUrl = string.Empty;
+        StateHasChanged();
+    }
+
+    private string FormatDecimal(decimal? value)
+    {
+        if (value == null) return "-";
+        return Math.Round(value.Value, 1).ToString("0.#");
+    }
+
+    private List<string> GetTags()
+    {
+        var tags = new List<string>();
+        if (!string.IsNullOrEmpty(Product.Category))
+        {
+            var allTags = Product.Category.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var singleWordTags = allTags.Where(t => !t.Contains(' ')).ToList();
+
+            var selectedTag = singleWordTags.OrderByDescending(t => t.Length).FirstOrDefault() ?? allTags.FirstOrDefault();
+
+            if (selectedTag != null)
+            {
+                tags.Add(selectedTag);
+            }
+        }
+
+        return tags;
+    }
+
+}

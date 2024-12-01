@@ -1,0 +1,50 @@
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div class="barcode-scanner">
+    <div class="scanner-container">
+        <video id="video" class="scanner-video"></video>
+        <canvas id="canvas" class="scanner-canvas"></canvas>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> OnBarcodeScanned { get; set; }
+    [Parameter] public bool Continuous { get; set; }
+
+    private IJSObjectReference _module;
+    private DotNetObjectReference<BarcodeScanner> _dotNetRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/dist/barcodeScanner.js");
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await StartScanning();
+        }
+    }
+
+    public async Task StartScanning()
+    {
+        await _module.InvokeVoidAsync("startScanning", _dotNetRef, Continuous);
+    }
+
+    [JSInvokable]
+    public async Task OnBarcode(string barcode)
+    {
+        await OnBarcodeScanned.InvokeAsync(barcode);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("stopScanning");
+            await _module.DisposeAsync();
+        }
+
+        _dotNetRef?.Dispose();
+    }
+
+}

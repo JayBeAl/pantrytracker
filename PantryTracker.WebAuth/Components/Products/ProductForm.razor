@@ -1,0 +1,179 @@
+@page "/products/new"
+@page "/products/edit/{Id:int}"
+@using PantryTracker.Core.Common
+@using PantryTracker.Core.Interfaces
+@using PantryTracker.Core.Models
+@using PantryTracker.WebAuth.Components.Shared
+@inject IProductService ProductService
+@inject NavigationManager NavigationManager
+
+<div class="product-form">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>@(_isNew ? "Add New Product" : "Edit Product")</h1>
+            <p class="text-muted">Enter product details and nutritional information</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <Alert Message="@_errorMessage" Type="AlertType.Error"/>
+    }
+
+    @if (!string.IsNullOrEmpty(_successMessage))
+    {
+        <Alert Message="@_successMessage" Type="AlertType.Success"/>
+    }
+
+    <EditForm Model="@_product" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator/>
+
+        <div class="form-section">
+            <h3 class="section-title">Basic Information</h3>
+
+            <div class="form-group">
+                <label>Product Name</label>
+                <InputText @bind-Value="_product.Name" class="form-control"/>
+                <ValidationMessage For="@(() => _product.Name)"/>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Brand</label>
+                    <InputText @bind-Value="_product.Brand" class="form-control"/>
+                    <ValidationMessage For="@(() => _product.Brand)"/>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <InputText @bind-Value="_product.Category" class="form-control" placeholder="e.g. Dairy, Snacks"/>
+                    <ValidationMessage For="@(() => _product.Category)"/>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Barcode</label>
+                    <InputText @bind-Value="_product.Barcode" class="form-control"/>
+                    <ValidationMessage For="@(() => _product.Barcode)"/>
+                </div>
+                <div class="form-group">
+                    <label>Serving Size</label>
+                    <InputText @bind-Value="_product.ServingSize" class="form-control" placeholder="e.g. 100g, 1 cup"/>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Image URL</label>
+                <InputText @bind-Value="_product.ImageUrl" class="form-control" placeholder="https://..."/>
+                <ValidationMessage For="@(() => _product.ImageUrl)"/>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3 class="section-title">Nutritional Information</h3>
+            <p class="section-description">Per serving</p>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Energy (kcal)</label>
+                    <InputNumber @bind-Value="_product.EnergyKcal" class="form-control"/>
+                </div>
+                <div class="form-group">
+                    <label>Proteins (g)</label>
+                    <InputNumber @bind-Value="_product.Proteins" class="form-control"/>
+                </div>
+                <div class="form-group">
+                    <label>Carbohydrates (g)</label>
+                    <InputNumber @bind-Value="_product.Carbohydrates" class="form-control"/>
+                </div>
+                <div class="form-group">
+                    <label>Fat (g)</label>
+                    <InputNumber @bind-Value="_product.Fat" class="form-control"/>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" disabled="@_isProcessing">
+                @if (_isProcessing)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Processing...</span>
+                }
+                else
+                {
+                    <i class="fas fa-save"></i>
+                    <span>Save Product</span>
+                }
+            </button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    private ProductCache _product = new();
+    private bool _isNew => Id == null;
+    private string _errorMessage;
+    private string _successMessage;
+    private bool _isProcessing;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!_isNew)
+        {
+            var result = await ProductService.GetByIdAsync(Id.Value);
+            if (result.IsSuccess)
+            {
+                _product = result.Value;
+            }
+            else
+            {
+                _errorMessage = result.Error;
+            }
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        _isProcessing = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        Result<bool> result;
+        if (_isNew)
+        {
+            _product.CreatedAt = DateTime.UtcNow;
+            _product.LastUpdated = DateTime.UtcNow;
+            result = await ProductService.AddProductAsync(_product);
+        }
+        else
+        {
+            _product.LastUpdated = DateTime.UtcNow;
+            result = await ProductService.UpdateProductAsync(_product);
+        }
+
+        if (result.IsSuccess)
+        {
+            _successMessage = _isNew ? "Product added successfully" : "Product updated successfully";
+            await Task.Delay(1000);
+            NavigationManager.NavigateTo("/products");
+        }
+        else
+        {
+            _errorMessage = result.Error;
+        }
+
+        _isProcessing = false;
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/products");
+    }
+
+}

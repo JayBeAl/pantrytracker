@@ -1,0 +1,146 @@
+@using PantryTracker.Core.Models
+@inject IJSRuntime JsRuntime
+
+<div class="food-item-card">
+    <div class="card-header">
+        <div class="product-info">
+            <div class="image-container">
+                @if (!string.IsNullOrEmpty(Item.Product.ImageUrl))
+                {
+                    <img src="@Item.Product.ImageUrl" alt="@Item.Product.Name" class="product-image" loading="lazy"/>
+                }
+                else
+                {
+                    <div class="placeholder-image">
+                        <i class="fas fa-box"></i>
+                    </div>
+                }
+            </div>
+            <div class="product-details">
+                <div class="name-row">
+                    <div class="title-section">
+                        @if (!string.IsNullOrEmpty(Item.Product.Brand))
+                        {
+                            <div class="brand">@Item.Product.Brand</div>
+                        }
+                        <h4 class="item-name">@Item.Product.Name</h4>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-icon" @onclick="() => OnEdit.InvokeAsync(Item.Id)" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon" @onclick="HandleDelete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="meta-info">
+                    <div class="tags">
+                        @foreach (var tag in GetTags())
+                        {
+                            <span class="tag">@tag</span>
+                        }
+                    </div>
+                    <span class="expiry-badge @GetExpiryBadgeClass()">
+                        <i class="fas @GetExpiryIcon()"></i>
+                        <span>@Item.ExpiryDate.ToShortDateString()</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="inventory-info">
+            <div class="info-item">
+                <i class="fas fa-boxes"></i>
+                <span class="value">@Item.Quantity</span>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span class="value">@Item.StorageLocation</span>
+            </div>
+        </div>
+
+        <div class="nutritional-info">
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Item.Product.EnergyKcal)</span>
+                <span class="nutrient-label">kcal</span>
+            </div>
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Item.Product.Proteins)</span>
+                <span class="nutrient-label">protein</span>
+            </div>
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Item.Product.Carbohydrates)</span>
+                <span class="nutrient-label">carbs</span>
+            </div>
+            <div class="nutrient">
+                <span class="nutrient-value">@FormatDecimal(Item.Product.Fat)</span>
+                <span class="nutrient-label">fat</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public FoodItem Item { get; set; } = null!;
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    [Parameter] public EventCallback<int> OnEdit { get; set; }
+
+    private string FormatDecimal(decimal? value)
+    {
+        if (value == null) return "-";
+        return Math.Round(value.Value, 1).ToString("0.#");
+    }
+
+    private List<string> GetTags()
+    {
+        var tags = new List<string>();
+        if (!string.IsNullOrEmpty(Item.Product.Category))
+        {
+            var allTags = Item.Product.Category.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var singleWordTags = allTags.Where(t => !t.Contains(' ')).ToList();
+
+            var selectedTag = singleWordTags.OrderByDescending(t => t.Length).FirstOrDefault() ?? allTags.FirstOrDefault();
+
+            if (selectedTag != null)
+            {
+                tags.Add(selectedTag);
+            }
+        }
+
+        return tags;
+    }
+
+    private async Task HandleDelete()
+    {
+        if (await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this item?"))
+        {
+            await OnDelete.InvokeAsync(Item.Id);
+        }
+    }
+
+    private string GetExpiryBadgeClass()
+    {
+        var daysUntilExpiry = (Item.ExpiryDate - DateTime.Now).Days;
+        return daysUntilExpiry switch
+        {
+            <= 7 => "badge-danger",
+            <= 30 => "badge-warning",
+            _ => "badge-success"
+        };
+    }
+
+    private string GetExpiryIcon()
+    {
+        var daysUntilExpiry = (Item.ExpiryDate - DateTime.Now).Days;
+        return daysUntilExpiry switch
+        {
+            <= 7 => "fa-exclamation-circle",
+            <= 30 => "fa-clock",
+            _ => "fa-check-circle"
+        };
+    }
+
+}

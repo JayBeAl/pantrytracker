@@ -1,0 +1,230 @@
+@page "/scanning-session"
+@inject IFoodItemService FoodItemService
+@inject IOpenFoodFactsService OpenFoodFactsService
+@inject NavigationManager NavigationManager
+@inject SessionStorage SessionStorage
+@inject IJSRuntime JSRuntime
+@using PantryTracker.Core.Interfaces
+@using PantryTracker.WebAuth.Components.ScanningSession.Enums
+@using PantryTracker.WebAuth.Components.ScanningSession.Models
+@using PantryTracker.WebAuth.Components.Shared
+@using PantryTracker.WebAuth.Services
+@implements IDisposable
+
+<div class="scanning-session">
+    <div class="session-header">
+        <h2>Scanning Session</h2>
+        <div class="session-controls">
+            <span class="status-badge @GetStatusClass()">@_currentState</span>
+            <button class="btn btn-secondary" @onclick="EndSession">
+                <i class="fas fa-times"></i> End Session
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <Alert Message="@_errorMessage" Type="AlertType.Error"/>
+    }
+
+    @if (_showSummary)
+    {
+        <SessionSummary
+            SessionState="@_sessionState"
+            OnFinish="FinishSession"/>
+    }
+
+    <BarcodeScanner @ref="_scanner" OnBarcodeScanned="HandleBarcode" Continuous="true"/>
+
+    <div class="scanned-items">
+        <h3>Scanned Items (@_sessionState.TotalScanned)</h3>
+        <div class="items-list">
+            @foreach (var item in _sessionState.ScannedItems.OrderByDescending(x => x.Timestamp))
+            {
+                <div class="scanned-item @(item.IsProcessed ? "processed" : "")">
+                    <div class="item-info">
+                        <span class="item-name">@item.Name</span>
+                        <span class="item-barcode">@item.Barcode</span>
+                    </div>
+                    <div class="item-status">
+                        @if (item.ExistingItem)
+                        {
+                            <span class="badge badge-info">Existing</span>
+                        }
+                        @if (item.IsProcessed)
+                        {
+                            <span class="badge badge-success">Added</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (_showDialog)
+    {
+        <ItemDetailsDialog
+            Show="true"
+            OnSave="HandleDetailsSave"
+            OnCancel="HandleDetailsCancel"/>
+    }
+</div>
+
+@code {
+    private ScanningSessionState _sessionState = new();
+    private bool _showDialog;
+    private bool _showSummary;
+    private ScannedItem _currentItem;
+    private ScanningState _currentState = ScanningState.Ready;
+    private IJSObjectReference _scannerModule;
+    private IJSObjectReference _sessionModule;
+    private BarcodeScanner _scanner;
+    private string _errorMessage;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _scannerModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/dist/barcodeScanner.js");
+            _sessionModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/dist/scanningSession.js");
+
+            await SessionStorage.ClearScanningSessionAsync();
+            _sessionState = new ScanningSessionState();
+            _currentState = ScanningState.Scanning;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleBarcode(string barcode)
+    {
+        try
+        {
+            _errorMessage = null;
+            _currentState = ScanningState.ProcessingItem;
+            await _scannerModule.InvokeVoidAsync("pauseScanning");
+            await _sessionModule.InvokeVoidAsync("playSuccessSound");
+
+            _currentItem = new ScannedItem
+            {
+                Barcode = barcode,
+                Timestamp = DateTime.Now,
+                IsProcessed = false
+            };
+
+            await ProcessScannedItem(_currentItem);
+            _sessionState.ScannedItems.Add(_currentItem);
+            await SessionStorage.SaveScanningSessionAsync(_sessionState);
+
+            _showDialog = true;
+            _currentState = ScanningState.AwaitingDetails;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error processing barcode: {ex.Message}";
+            _currentState = ScanningState.Error;
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task ProcessScannedItem(ScannedItem item)
+    {
+        var existingItem = await FoodItemService.GetByBarcodeAsync(item.Barcode);
+        if (existingItem.IsSuccess)
+        {
+            item.Name = existingItem.Value.Product.Name;
+            item.ExistingItem = true;
+        }
+        else
+        {
+            var productInfo = await OpenFoodFactsService.GetProductByBarcodeAsync(item.Barcode);
+            if (productInfo.IsSuccess)
+            {
+                item.Name = productInfo.Value.Name;
+            }
+            else
+            {
+                item.Name = "Unknown Product";
+            }
+        }
+    }
+
+    private async Task HandleDetailsSave(ItemDetails details)
+    {
+        try
+        {
+            var result = await FoodItemService.QuickAddWithDetailsAsync(
+                _currentItem.Barcode,
+                details.Quantity,
+                details.StorageLocation,
+                details.ExpiryDate
+            );
+
+            if (result.IsSuccess)
+            {
+                _currentItem.IsProcessed = true;
+                await SessionStorage.SaveScanningSessionAsync(_sessionState);
+            }
+        }
+        catch (Exception)
+        {
+            _currentState = ScanningState.Error;
+        }
+
+        _showDialog = false;
+        _currentState = ScanningState.Scanning;
+        await _scannerModule.InvokeVoidAsync("resumeScanning");
+        StateHasChanged();
+    }
+
+    private async Task HandleDetailsCancel()
+    {
+        _showDialog = false;
+        _currentState = ScanningState.Scanning;
+        await _scannerModule.InvokeVoidAsync("resumeScanning");
+        StateHasChanged();
+    }
+
+    private async Task EndSession()
+    {
+        await _scannerModule.InvokeVoidAsync("stopScanning");
+        _showSummary = true;
+        _currentState = ScanningState.Complete;
+        StateHasChanged();
+    }
+
+    private async Task FinishSession()
+    {
+        await _scannerModule.InvokeVoidAsync("stopScanning");
+        await SessionStorage.ClearScanningSessionAsync();
+        NavigationManager.NavigateTo("/", true);
+    }
+
+    private string GetStatusClass() => _currentState switch
+    {
+        ScanningState.Ready => "status-ready",
+        ScanningState.Scanning => "status-scanning",
+        ScanningState.ProcessingItem => "status-processing",
+        ScanningState.AwaitingDetails => "status-awaiting",
+        ScanningState.Error => "status-error",
+        ScanningState.Complete => "status-complete",
+        _ => ""
+    };
+
+    public async void Dispose()
+    {
+        if (_scannerModule != null)
+        {
+            await _scannerModule.InvokeVoidAsync("stopScanning");
+            await _scannerModule.DisposeAsync();
+        }
+
+        if (_sessionModule != null)
+        {
+            await _sessionModule.DisposeAsync();
+        }
+    }
+
+}

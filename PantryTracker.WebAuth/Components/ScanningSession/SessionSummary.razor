@@ -1,0 +1,43 @@
+@using PantryTracker.WebAuth.Services
+<div class="session-summary">
+    <div class="summary-header">
+        <h3>Session Summary</h3>
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-value">@SessionState.TotalScanned</span>
+                <span class="stat-label">Total Items</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">@SessionState.UpdatedItems</span>
+                <span class="stat-label">Updated Items</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">@SessionState.NewItems</span>
+                <span class="stat-label">New Items</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-content">
+        <div class="summary-list">
+            @foreach (var item in SessionState.ScannedItems.OrderBy(x => x.Name))
+            {
+                <div class="summary-item">
+                    <span class="item-name">@item.Name</span>
+                    <div class="item-meta">
+                        <span class="item-type">@(item.ExistingItem ? "Updated" : "Added")</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="summary-actions">
+        <button class="btn btn-primary" @onclick="OnFinish">Finish</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ScanningSessionState SessionState { get; set; }
+    [Parameter] public EventCallback OnFinish { get; set; }
+}

@@ -10,6 +10,7 @@ using PantryTracker.Infrastructure.Data.Repositories;
 using PantryTracker.Infrastructure.Services;
 using PantryTracker.WebAuth.Components;
 using PantryTracker.WebAuth.Components.Account;
+using PantryTracker.WebAuth.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,9 +49,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 // Repositories
 builder.Services.AddScoped<IFoodItemRepository, FoodItemRepository>();
 builder.Services.AddScoped<IProductCacheRepository, ProductCacheRepository>();
-
-// ToDo: Add when SessionStorage is implemented
-// builder.Services.AddScoped<SessionStorage>();
+builder.Services.AddScoped<SessionStorage>();
 
 // Services
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
