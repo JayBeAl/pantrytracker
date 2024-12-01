@@ -28,4 +28,12 @@
         <ProjectReference Include="..\PantryTracker.Infrastructure\PantryTracker.Infrastructure.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <AdditionalFiles Include="Components\Dashboard\Components\DashboardStats.razor"/>
+        <AdditionalFiles Include="Components\Dashboard\Components\ExpiringItemsList.razor"/>
+        <AdditionalFiles Include="Components\Dashboard\Components\LowStockList.razor"/>
+        <AdditionalFiles Include="Components\Dashboard\Components\QuickActions.razor"/>
+        <AdditionalFiles Include="Components\Dashboard\Dashboard.razor"/>
+    </ItemGroup>
+
 </Project>

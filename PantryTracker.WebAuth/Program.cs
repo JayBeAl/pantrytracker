@@ -1,8 +1,13 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using PantryTracker.Core.Interfaces;
 using PantryTracker.Core.Models;
 using PantryTracker.Infrastructure;
+using PantryTracker.Infrastructure.Data;
+using PantryTracker.Infrastructure.Data.Repositories;
+using PantryTracker.Infrastructure.Services;
 using PantryTracker.WebAuth.Components;
 using PantryTracker.WebAuth.Components.Account;
 
@@ -11,7 +16,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
 
+// Authentication and Identity
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
@@ -24,20 +32,47 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
+// Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                        throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<PantryContext>(options =>
     options.UseSqlite(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Identity Configuration
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<PantryContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+// Repositories
+builder.Services.AddScoped<IFoodItemRepository, FoodItemRepository>();
+builder.Services.AddScoped<IProductCacheRepository, ProductCacheRepository>();
+
+// ToDo: Add when SessionStorage is implemented
+// builder.Services.AddScoped<SessionStorage>();
+
+// Services
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddScoped<IFoodItemService, FoodItemService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(client =>
+{
+    client.BaseAddress = new Uri("https://world.openfoodfacts.org/api/v2/");
+});
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options => { options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; });
 
 var app = builder.Build();
+
+// Initialize Database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<PantryContext>();
+    DbInitializer.Initialize(context);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -47,17 +82,22 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
+// Update the middleware section to:
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+app.MapBlazorHub();
+app.MapControllers();
+
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
