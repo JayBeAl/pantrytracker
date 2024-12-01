@@ -1,0 +1,6 @@
+﻿services:
+  pantrytracker.webauth:
+    image: pantrytracker.webauth
+    build:
+      context: .
+      dockerfile: PantryTracker.WebAuth/Dockerfile

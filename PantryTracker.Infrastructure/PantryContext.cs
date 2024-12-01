@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PantryTracker.Core.Models;
 
 namespace PantryTracker.Infrastructure;
 
-public class PantryContext : DbContext
+public class PantryContext : IdentityDbContext<ApplicationUser>
 {
     public PantryContext(DbContextOptions<PantryContext> options) : base(options)
     {
